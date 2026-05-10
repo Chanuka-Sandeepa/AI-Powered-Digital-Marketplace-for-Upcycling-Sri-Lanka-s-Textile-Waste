@@ -1,0 +1,8 @@
+flask==2.3.0
+flask-cors==4.0.0
+flask-pymongo==2.3.0
+torch==2.11.0
+torchvision==0.26.0
+pillow==10.0.0
+python-dotenv==1.0.0
+werkzeug==2.3.0
