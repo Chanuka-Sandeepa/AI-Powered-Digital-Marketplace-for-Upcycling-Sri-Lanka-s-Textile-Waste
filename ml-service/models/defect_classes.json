@@ -1,0 +1,7 @@
+{
+  "_comment": "The fabric_defect_model.pth checkpoint stores only weights, not label names - a .pth file has no concept of which output index means what. This order (index 0 = Defect, index 1 = No Defect) is an inferred best guess, not confirmed ground truth: it matches (a) running a real, confirmed-clean fabric photo through the model, which scored higher on index 1, and (b) the standard alphabetical class order torchvision's ImageFolder assigns during training ('Defect' sorts before 'No Defect'). If real-world results seem backwards (clean photos scoring as defective and vice versa), swap the two entries below and restart the service.",
+  "classes": [
+    "Defect",
+    "No Defect"
+  ]
+}
