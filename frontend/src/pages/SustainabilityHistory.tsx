@@ -162,20 +162,6 @@ const SustainabilityHistory = ({ user, onLogout }: SustainabilityHistoryProps) =
                 </div>
               </div>
             </div>
-
-            <div className="bg-white rounded-xl p-6 shadow-sm">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-gray-500 text-sm">Revenue Generated</p>
-                  <p className="text-2xl font-bold text-gray-900">LKR {formatNumber(totals.revenueGenerated)}</p>
-                </div>
-                <div className="h-12 w-12 bg-yellow-100 rounded-full flex items-center justify-center">
-                  <svg className="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-              </div>
-            </div>
           </div>
 
           {/* Environmental Impact Equivalents */}
@@ -193,10 +179,6 @@ const SustainabilityHistory = ({ user, onLogout }: SustainabilityHistoryProps) =
               <div className="text-center p-4 bg-gray-50 rounded-lg">
                 <p className="text-3xl font-bold text-cyan-600">{(totals.energySaved / 10).toFixed(0)}</p>
                 <p className="text-gray-500 text-sm">Days of household electricity</p>
-              </div>
-              <div className="text-center p-4 bg-gray-50 rounded-lg">
-                <p className="text-3xl font-bold text-emerald-600">{(totals.wasteDiverted / 500).toFixed(0)}</p>
-                <p className="text-gray-500 text-sm">Washing machines recycled</p>
               </div>
             </div>
           </div>
@@ -284,7 +266,7 @@ const SustainabilityHistory = ({ user, onLogout }: SustainabilityHistoryProps) =
 
           {/* Sustainability Tips */}
           <div className="mt-6 bg-gradient-to-r from-green-50 to-cyan-50 rounded-xl p-6 border border-green-200">
-            <h3 className="font-semibold text-green-800 mb-3">💡 Sustainability Tips</h3>
+            <h3 className="font-semibold text-green-800 mb-3">Sustainability Tips</h3>
             <ul className="space-y-2 text-sm text-green-700">
               <li>• Continue sorting materials by fabric type for higher recycling efficiency</li>
               <li>• Consider partnering with local recyclers to reduce transportation emissions</li>
