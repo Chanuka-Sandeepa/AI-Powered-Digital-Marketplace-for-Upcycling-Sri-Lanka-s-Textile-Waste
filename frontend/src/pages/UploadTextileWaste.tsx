@@ -18,6 +18,7 @@ interface AIAnalysisResult {
   healthScore: number;
   repairability: string;
   remainingLifespan: number;
+  images: string[];
 }
 
 const UploadTextileWaste = ({ user, onLogout }: UploadTextileWasteProps) => {
@@ -38,11 +39,11 @@ const UploadTextileWaste = ({ user, onLogout }: UploadTextileWasteProps) => {
   const [isPublishing, setIsPublishing] = useState(false);
   const [publishError, setPublishError] = useState('');
   const [sustainabilityGrade, setSustainabilityGrade] = useState<SustainabilityGradeResult | null>(null);
-  const [isGrading, setIsGrading] = useState(false);
-  const [gradeError, setGradeError] = useState('');
+  const [, setIsGrading] = useState(false);
+  const [, setGradeError] = useState('');
   const [marketplacePrediction, setMarketplacePrediction] = useState<MarketplaceAnalysisResult | null>(null);
   const [isPredictingPrice, setIsPredictingPrice] = useState(false);
-  const [priceError, setPriceError] = useState('');
+  const [, setPriceError] = useState('');
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -265,6 +266,8 @@ const UploadTextileWaste = ({ user, onLogout }: UploadTextileWasteProps) => {
         province,
         industryType: materialInfo.industryType,
         description: `AI-analyzed ${aiResults.fabricType} textile waste. Health Score: ${aiResults.healthScore.toFixed(2)}, Repairability: ${aiResults.repairability}. Sustainability score: ${sustainabilityScore}/100.`,
+        imageUrl: aiResults.images[0] || '',
+        images: aiResults.images,
         fabricType: aiResults.fabricType,
         confidence: aiResults.confidence,
         defectArea: aiResults.defectArea,
@@ -288,19 +291,7 @@ const UploadTextileWaste = ({ user, onLogout }: UploadTextileWasteProps) => {
     return 'text-red-600';
   };
 
-  const getConfidenceColor = (confidence: number) => {
-    if (confidence >= 90) return 'text-green-600';
-    if (confidence >= 50) return 'text-yellow-600';
-    return 'text-red-600';
-  };
 
-  const gradeColor: Record<string, string> = {
-    'A+': 'text-emerald-600 bg-emerald-50 border-emerald-200',
-    A: 'text-green-600 bg-green-50 border-green-200',
-    B: 'text-cyan-600 bg-cyan-50 border-cyan-200',
-    C: 'text-amber-600 bg-amber-50 border-amber-200',
-    D: 'text-red-600 bg-red-50 border-red-200',
-  };
 
   return (
     <div className="flex min-h-screen bg-gray-100">
@@ -507,28 +498,7 @@ const UploadTextileWaste = ({ user, onLogout }: UploadTextileWasteProps) => {
               <div className="bg-white rounded-2xl p-6 shadow-sm border">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="font-semibold text-xl">AI Generated Insights</h2>
-                  {aiResults.confidence >= 50 ? (
-                    <span className="text-xs bg-green-100 text-green-700 px-3 py-1 rounded-full">
-                      Generated automatically from your uploaded media
-                    </span>
-                  ) : (
-                    <span className="text-xs bg-amber-100 text-amber-700 px-3 py-1 rounded-full">
-                      Low confidence — please review below
-                    </span>
-                  )}
                 </div>
-
-                {aiResults.confidence < 50 && (
-                  <div className="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-800">
-                    <p className="font-medium mb-1">The model isn't very sure about this one ({aiResults.confidence.toFixed(1)}% confidence).</p>
-                    <p className="text-amber-700">
-                      This can happen with dim lighting, busy backgrounds, or a photo taken from too far away.
-                      For a more reliable result: go back and add 2-3 more close-up photos of the fabric texture
-                      in good, even lighting against a plain background — the AI averages across all uploaded
-                      images, so more (clearer) photos usually raises confidence.
-                    </p>
-                  </div>
-                )}
 
                 {aiResults.defectArea > 60 && (
                   <div className="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-800">
@@ -546,12 +516,6 @@ const UploadTextileWaste = ({ user, onLogout }: UploadTextileWasteProps) => {
                   <div>
                     <p className="text-gray-500 text-sm">Fabric Type</p>
                     <p className="font-medium text-lg">{aiResults.fabricType}</p>
-                  </div>
-                  <div>
-                    <p className="text-gray-500 text-sm">Confidence</p>
-                    <p className={`font-medium text-lg ${getConfidenceColor(aiResults.confidence)}`}>
-                      {aiResults.confidence.toFixed(2)}%
-                    </p>
                   </div>
                 </div>
 
@@ -578,132 +542,6 @@ const UploadTextileWaste = ({ user, onLogout }: UploadTextileWasteProps) => {
                     <p className="font-medium text-lg">{aiResults.remainingLifespan.toFixed(1)} Months</p>
                   </div>
                 </div>
-
-                {isGrading ? (
-                  <div className="mt-4 p-6 bg-gray-50 rounded-lg border border-gray-200 flex items-center gap-3">
-                    <div className="animate-spin w-5 h-5 border-2 border-cyan-500 border-t-transparent rounded-full"></div>
-                    <p className="text-gray-500 text-sm">Running the sustainability grading model...</p>
-                  </div>
-                ) : sustainabilityGrade ? (
-                  <div className="mt-4 p-5 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200">
-                    <div className="flex items-center justify-between mb-4">
-                      <div>
-                        <p className="text-gray-700 text-sm font-medium">Sustainability Grade</p>
-                        <p className="text-gray-500 text-xs">Predicted by the XGBoost sustainability model</p>
-                      </div>
-                      <span className={`text-2xl font-bold px-4 py-1.5 rounded-full border ${gradeColor[sustainabilityGrade.grade] || 'text-gray-600 bg-gray-50 border-gray-200'}`}>
-                        {sustainabilityGrade.grade}
-                      </span>
-                    </div>
-
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                      <div className="bg-white/70 rounded-lg p-3">
-                        <p className="text-[10px] text-gray-500 uppercase font-semibold">CO₂ Saved</p>
-                        <p className="font-bold text-gray-900">{sustainabilityGrade.co2SavedKg.toFixed(1)} kg</p>
-                      </div>
-                      <div className="bg-white/70 rounded-lg p-3">
-                        <p className="text-[10px] text-gray-500 uppercase font-semibold">Water Saved</p>
-                        <p className="font-bold text-gray-900">{sustainabilityGrade.waterSavedLiters.toFixed(0)} L</p>
-                      </div>
-                      <div className="bg-white/70 rounded-lg p-3">
-                        <p className="text-[10px] text-gray-500 uppercase font-semibold">Energy Saved</p>
-                        <p className="font-bold text-gray-900">{sustainabilityGrade.energySavedKwh.toFixed(1)} kWh</p>
-                      </div>
-                      <div className="bg-white/70 rounded-lg p-3">
-                        <p className="text-[10px] text-gray-500 uppercase font-semibold">Landfill Diverted</p>
-                        <p className="font-bold text-gray-900">{sustainabilityGrade.landfillDivertedKg.toFixed(0)} kg</p>
-                      </div>
-                      <div className="bg-white/70 rounded-lg p-3">
-                        <p className="text-[10px] text-gray-500 uppercase font-semibold">Circularity Score</p>
-                        <p className="font-bold text-gray-900">{sustainabilityGrade.circularityScore.toFixed(0)}/100</p>
-                      </div>
-                      <div className="bg-white/70 rounded-lg p-3">
-                        <p className="text-[10px] text-gray-500 uppercase font-semibold">Recyclability Score</p>
-                        <p className="font-bold text-gray-900">{sustainabilityGrade.recyclabilityScore.toFixed(0)}/100</p>
-                      </div>
-                      <div className="bg-white/70 rounded-lg p-3">
-                        <p className="text-[10px] text-gray-500 uppercase font-semibold">SDG Impact</p>
-                        <p className="font-bold text-gray-900">{sustainabilityGrade.sdgImpactScore.toFixed(0)}/100</p>
-                      </div>
-                      <div className="bg-white/70 rounded-lg p-3">
-                        <p className="text-[10px] text-gray-500 uppercase font-semibold">Economic Impact</p>
-                        <p className="font-bold text-gray-900">{sustainabilityGrade.economicImpactScore.toFixed(0)}/100</p>
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="mt-4 p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200">
-                    {gradeError && (
-                      <p className="text-amber-700 text-xs mb-2">{gradeError}</p>
-                    )}
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-gray-700 text-sm font-medium">Sustainability Score (estimate)</p>
-                        <p className="text-gray-500 text-xs">Rough client-side estimate — not the ML model</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-3xl font-bold text-green-600">{calculateSustainabilityScore(aiResults)}</p>
-                        <p className="text-green-600 text-xs">out of 100</p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-                  <p className="text-gray-500 text-xs">
-                    Material Type, Condition, and Description are read-only as they are locked to AI verification for marketplace trust.
-                  </p>
-                </div>
-              </div>
-
-              {/* Marketplace Intelligence: AI-predicted price, demand, buyers */}
-              <div className="bg-white rounded-2xl p-6 shadow-sm border">
-                <h2 className="font-semibold text-xl mb-4">Marketplace Intelligence</h2>
-
-                {isPredictingPrice ? (
-                  <div className="p-6 bg-gray-50 rounded-lg border border-gray-200 flex items-center gap-3">
-                    <div className="animate-spin w-5 h-5 border-2 border-cyan-500 border-t-transparent rounded-full"></div>
-                    <p className="text-gray-500 text-sm">Predicting price, demand and buyer matches...</p>
-                  </div>
-                ) : marketplacePrediction ? (
-                  <div className="space-y-4">
-                    {priceError && (
-                      <p className="text-amber-700 text-sm bg-amber-50 border border-amber-200 rounded-lg p-4">{priceError}</p>
-                    )}
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="p-4 bg-gradient-to-r from-cyan-50 to-blue-50 rounded-lg border border-cyan-100">
-                        <p className="text-gray-500 text-xs uppercase font-semibold">
-                          {priceError ? 'Estimated Price' : 'AI-Predicted Price'}
-                        </p>
-                        <p className="text-2xl font-bold text-cyan-700 mt-1">
-                          LKR {marketplacePrediction.predictedPricePerKg.toLocaleString()}<span className="text-sm font-medium text-gray-500">/kg</span>
-                        </p>
-                        <p className="text-gray-400 text-xs mt-1">
-                          {priceError ? 'Live model unavailable — using a fallback estimate for this listing.' : 'This is what your listing will publish at.'}
-                        </p>
-                      </div>
-                      <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
-                        <p className="text-gray-500 text-xs uppercase font-semibold">Predicted Demand</p>
-                        <p className="text-2xl font-bold text-gray-800 mt-1">
-                          {marketplacePrediction.demandLevel}
-                          <span className="text-sm font-medium text-gray-400"> ({marketplacePrediction.demandConfidence.toFixed(0)}% confidence)</span>
-                        </p>
-                      </div>
-                    </div>
-
-                    <div>
-                      <p className="text-gray-500 text-xs uppercase font-semibold mb-2">Top Recommended Buyer Types</p>
-                      <div className="flex flex-wrap gap-2">
-                        {marketplacePrediction.recommendedBuyers.slice(0, 3).map((b) => (
-                          <span key={b.buyerType} className="text-xs font-medium bg-purple-50 text-purple-700 px-3 py-1.5 rounded-full border border-purple-100">
-                            {b.buyerType} · {b.matchScore.toFixed(0)}%
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                ) : null}
               </div>
 
               {/* Material Information Review */}
@@ -749,11 +587,6 @@ const UploadTextileWaste = ({ user, onLogout }: UploadTextileWasteProps) => {
               </div>
             </div>
           )}
-
-          {/* Auto-save notice */}
-          <div className="mt-6 text-center text-gray-400 text-sm">
-            Progress is autosaved every 30 seconds
-          </div>
         </div>
       </main>
     </div>
