@@ -2,7 +2,7 @@
 // after setting up the database - super_admin accounts can never be
 // created through the public registration form (see authController.js),
 // so this is the only way to bootstrap the first one. After that, a
-// super_admin can promote other users to admin/super_admin through the
+// super_admin can create admin accounts and promote users through the
 // admin user-management panel.
 //
 // Usage (from the backend folder):

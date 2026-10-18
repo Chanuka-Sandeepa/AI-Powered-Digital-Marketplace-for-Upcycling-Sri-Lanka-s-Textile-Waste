@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { X, MapPin, User as UserIcon, MessageSquare, AlertCircle } from 'lucide-react';
 import API from '../services/api.js';
 import type { Material, User } from '../types/index.js';
@@ -12,6 +13,7 @@ interface MaterialDetailsModalProps {
 }
 
 const MaterialDetailsModal: React.FC<MaterialDetailsModalProps> = ({ material, user, isOpen, onClose, onLoginPrompt }) => {
+  const navigate = useNavigate();
   const [inquiryText, setInquiryText] = useState('');
   const [success, setSuccess] = useState('');
   const [error, setError] = useState('');
@@ -125,8 +127,9 @@ const MaterialDetailsModal: React.FC<MaterialDetailsModalProps> = ({ material, u
               </h4>
 
               {success && (
-                <div className="rounded-lg bg-emerald-50 p-3 text-xs font-medium text-emerald-800 mb-4">
-                  {success}
+                <div className="mb-4 rounded-xl border border-emerald-100 bg-emerald-50 p-3 text-xs font-medium text-emerald-800">
+                  <p>{success}</p>
+                  <button type="button" onClick={() => { onClose(); navigate('/my-inquiries'); }} className="mt-2 font-bold text-emerald-900 underline underline-offset-2">View My Inquiries</button>
                 </div>
               )}
 

@@ -18,7 +18,7 @@ const Navbar: React.FC<NavbarProps> = ({ user, onLoginClick, onRegisterClick, on
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
           <div className="flex items-center gap-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-zinc-950 text-white">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-500 via-teal-500 to-cyan-500 text-white shadow-md shadow-teal-200">
               <Recycle className="h-5 w-5" />
             </div>
             <span className="font-sans text-xl font-bold tracking-tight text-zinc-900">
@@ -71,7 +71,7 @@ const Navbar: React.FC<NavbarProps> = ({ user, onLoginClick, onRegisterClick, on
                 </button>
                 <button
                   onClick={onRegisterClick}
-                  className="rounded-full bg-zinc-950 px-5 py-2 text-sm font-medium text-white hover:bg-zinc-800 transition-all hover:scale-105 active:scale-95 duration-200 shadow-sm"
+                  className="rounded-full bg-gradient-to-r from-emerald-600 to-cyan-600 px-5 py-2 text-sm font-medium text-white shadow-sm transition-all hover:from-emerald-700 hover:to-cyan-700 hover:scale-105 active:scale-95 duration-200"
                 >
                   Register
                 </button>

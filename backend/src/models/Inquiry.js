@@ -6,6 +6,8 @@ const inquirySchema = new mongoose.Schema(
     seller: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },
     buyer: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     message: { type: String, required: true, trim: true },
+    sellerReply: { type: String, trim: true, default: '' },
+    repliedAt: { type: Date, default: null },
     status: { type: String, enum: ['open', 'responded', 'closed'], default: 'open' },
   },
   { timestamps: true }

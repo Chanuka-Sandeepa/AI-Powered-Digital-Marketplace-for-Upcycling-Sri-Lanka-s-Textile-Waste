@@ -31,25 +31,32 @@ const AdminOverviewPage = ({ user, onLogout }: AdminOverviewProps) => {
   }, []);
 
   return (
-    <div className="flex min-h-screen bg-[#F8FAFC] font-sans">
+    <div className="flex min-h-screen bg-gradient-to-br from-slate-50 via-sky-50/40 to-violet-50/40 font-sans">
       <AdminSidebar user={user} onLogout={onLogout} />
 
-      <main className="flex-1 p-6 md:p-8">
-        <div className="max-w-6xl mx-auto space-y-6">
-          <div className="border-b border-gray-200 pb-5 flex items-start justify-between flex-wrap gap-3">
-            <div>
-              <div className="flex items-center gap-2 text-xs font-semibold text-rose-600 uppercase tracking-wide">
+      <main className="min-w-0 flex-1 p-4 md:p-8">
+        <div className="mx-auto max-w-7xl space-y-6">
+          <header className={`relative overflow-hidden rounded-3xl bg-gradient-to-r ${isSuperAdmin ? 'from-violet-700 via-indigo-600 to-blue-600 shadow-indigo-200/60' : 'from-teal-700 via-cyan-600 to-sky-600 shadow-cyan-200/60'} p-6 text-white shadow-lg sm:p-8`}>
+            <div className="absolute -right-8 -top-20 h-64 w-64 rounded-full bg-white/10" />
+            <div className="relative flex flex-wrap items-end justify-between gap-4">
+              <div>
+              <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-white/80">
                 {isSuperAdmin ? <ShieldAlert className="w-3.5 h-3.5" /> : <ShieldCheck className="w-3.5 h-3.5" />}
                 {isSuperAdmin ? 'Super Admin' : 'Admin'} Console
               </div>
-              <h1 className="text-3xl font-bold text-gray-900 mt-1">System Overview</h1>
-              <p className="text-gray-500 text-sm mt-0.5">
+              <h1 className="mt-2 text-3xl font-extrabold sm:text-4xl">System Overview</h1>
+              <p className="mt-2 max-w-2xl text-sm text-white/85">
                 {isSuperAdmin
                   ? 'Full system access - users, listings, and marketplace activity.'
                   : 'User accounts and buyer activity oversight.'}
               </p>
+              </div>
+              <div className="rounded-2xl border border-white/20 bg-white/10 px-4 py-3 backdrop-blur-sm">
+                <p className="text-xs text-white/75">Signed in as</p>
+                <p className="mt-0.5 font-bold">{user.name}</p>
+              </div>
             </div>
-          </div>
+          </header>
 
           {loading ? (
             <div className="bg-white rounded-2xl p-16 border border-gray-200 shadow-sm text-center">
@@ -62,44 +69,46 @@ const AdminOverviewPage = ({ user, onLogout }: AdminOverviewProps) => {
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
-                <StatCard label="Total Users" value={stats.totalUsers} icon={<Users className="w-5 h-5 text-rose-500" />} />
+              <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+                <StatCard label={isSuperAdmin ? 'All Accounts' : 'Managed Accounts'} value={stats.totalUsers} icon={<Users className="w-5 h-5 text-rose-500" />} />
                 <StatCard label="Buyers" value={stats.totalBuyers} icon={<Users className="w-5 h-5 text-teal-500" />} />
                 <StatCard label="Sellers" value={stats.totalSellers} icon={<Users className="w-5 h-5 text-sky-500" />} />
                 <StatCard label="Suspended" value={stats.suspendedUsers} icon={<ShieldAlert className="w-5 h-5 text-amber-500" />} />
-                <StatCard label="Total Listings" value={stats.totalMaterials} icon={<Store className="w-5 h-5 text-emerald-500" />} />
-                <StatCard label="Available" value={stats.availableMaterials} icon={<Store className="w-5 h-5 text-emerald-400" />} />
-                <StatCard label="Sold" value={stats.soldMaterials} icon={<Store className="w-5 h-5 text-gray-400" />} />
+                {isSuperAdmin && <>
+                  <StatCard label="Total Listings" value={stats.totalMaterials} icon={<Store className="w-5 h-5 text-emerald-500" />} />
+                  <StatCard label="Available" value={stats.availableMaterials} icon={<Store className="w-5 h-5 text-emerald-400" />} />
+                  <StatCard label="Sold" value={stats.soldMaterials} icon={<Store className="w-5 h-5 text-gray-400" />} />
+                </>}
                 <StatCard label="Inquiries" value={stats.totalInquiries} icon={<MessageSquare className="w-5 h-5 text-purple-500" />} />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div
                   onClick={() => navigate(`${base}/users`)}
-                  className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm cursor-pointer hover:shadow-md transition-shadow"
+                  className={`cursor-pointer rounded-2xl border bg-gradient-to-br p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${isSuperAdmin ? 'border-violet-100 from-violet-50 to-white' : 'border-teal-100 from-teal-50 to-white'}`}
                 >
-                  <Users className="w-6 h-6 text-rose-500 mb-2" />
+                  <Users className={`mb-2 h-6 w-6 ${isSuperAdmin ? 'text-violet-600' : 'text-teal-600'}`} />
                   <p className="font-semibold text-gray-900">Manage Users</p>
-                  <p className="text-xs text-gray-500 mt-1">Search, suspend, or reactivate accounts.</p>
-                  <div className="flex items-center gap-1 text-xs mt-3 font-medium text-rose-600">
+                  <p className="text-xs text-gray-500 mt-1">{isSuperAdmin ? 'Manage platform roles, create admins, and control accounts.' : 'Search, suspend, or reactivate buyer and seller accounts.'}</p>
+                  <div className={`mt-3 flex items-center gap-1 text-xs font-semibold ${isSuperAdmin ? 'text-violet-700' : 'text-teal-700'}`}>
                     Open <ArrowRight className="w-3.5 h-3.5" />
                   </div>
                 </div>
                 <div
                   onClick={() => navigate(`${base}/inquiries`)}
-                  className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm cursor-pointer hover:shadow-md transition-shadow"
+                  className="cursor-pointer rounded-2xl border border-sky-100 bg-gradient-to-br from-sky-50 to-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
                 >
-                  <MessageSquare className="w-6 h-6 text-purple-500 mb-2" />
+                  <MessageSquare className="mb-2 h-6 w-6 text-sky-600" />
                   <p className="font-semibold text-gray-900">Buyer Activity</p>
-                  <p className="text-xs text-gray-500 mt-1">Review every inquiry across the marketplace.</p>
-                  <div className="flex items-center gap-1 text-xs mt-3 font-medium text-purple-600">
+                  <p className="text-xs text-gray-500 mt-1">Review buyer messages and activity across the marketplace.</p>
+                  <div className="mt-3 flex items-center gap-1 text-xs font-semibold text-sky-700">
                     Open <ArrowRight className="w-3.5 h-3.5" />
                   </div>
                 </div>
                 {isSuperAdmin && (
                   <div
                     onClick={() => navigate(`${base}/listings`)}
-                    className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm cursor-pointer hover:shadow-md transition-shadow md:col-span-2"
+                    className="cursor-pointer rounded-2xl border border-emerald-100 bg-gradient-to-br from-emerald-50 to-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md md:col-span-2"
                   >
                     <Store className="w-6 h-6 text-emerald-500 mb-2" />
                     <p className="font-semibold text-gray-900">All Listings (system-wide)</p>
@@ -119,10 +128,10 @@ const AdminOverviewPage = ({ user, onLogout }: AdminOverviewProps) => {
 };
 
 const StatCard = ({ label, value, icon }: { label: string; value: number; icon: React.ReactNode }) => (
-  <div className="bg-white rounded-2xl p-5 border border-gray-200 shadow-sm">
-    {icon}
-    <p className="text-2xl font-bold text-gray-900 mt-2">{value}</p>
-    <p className="text-gray-500 text-xs mt-0.5">{label}</p>
+  <div className="rounded-2xl border border-white bg-white/90 p-4 shadow-sm ring-1 ring-slate-100 transition hover:-translate-y-0.5 hover:shadow-md sm:p-5">
+    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-50">{icon}</div>
+    <p className="mt-3 text-2xl font-extrabold text-slate-900">{value.toLocaleString()}</p>
+    <p className="mt-0.5 text-xs font-medium text-slate-500">{label}</p>
   </div>
 );
 

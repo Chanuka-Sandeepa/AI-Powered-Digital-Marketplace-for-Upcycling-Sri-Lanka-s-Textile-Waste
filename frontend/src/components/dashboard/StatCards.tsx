@@ -50,24 +50,28 @@ const StatCards = () => {
       value: stats.totalListings.toLocaleString(),
       icon: <Package size={22} />,
       iconClass: 'bg-sky-50 text-sky-600',
+      cardClass: 'from-white to-sky-50/80 border-sky-100',
     },
     {
       title: 'Sold Materials',
       value: stats.soldListings.toLocaleString(),
       icon: <ShoppingBag size={22} />,
       iconClass: 'bg-green-50 text-green-600',
+      cardClass: 'from-white to-emerald-50/80 border-emerald-100',
     },
     {
       title: 'Revenue',
       value: `LKR ${stats.revenue.toLocaleString()}`,
       icon: <Wallet size={22} />,
       iconClass: 'bg-amber-50 text-amber-600',
+      cardClass: 'from-white to-amber-50/80 border-amber-100',
     },
     {
       title: 'Total Quantity',
       value: `${stats.totalQuantity.toLocaleString()} kg`,
       icon: <Scale size={22} />,
       iconClass: 'bg-purple-50 text-purple-600',
+      cardClass: 'from-white to-violet-50/80 border-violet-100',
     },
   ];
 
@@ -93,7 +97,7 @@ const StatCards = () => {
       {statItems.map((item) => (
         <div
           key={item.title}
-          className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100"
+          className={`rounded-2xl border bg-gradient-to-br p-5 shadow-sm transition-shadow hover:shadow-md ${item.cardClass}`}
         >
           <div className="flex items-start justify-between">
             <div className={`w-11 h-11 rounded-xl flex items-center justify-center ${item.iconClass}`}>

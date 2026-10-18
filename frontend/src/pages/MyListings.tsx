@@ -132,37 +132,41 @@ const MyListings = ({ user, onLogout }: MyListingsProps) => {
   );
 
   return (
-    <div className="flex min-h-screen bg-gray-100">
+    <div className="flex min-h-screen bg-gradient-to-br from-slate-50 via-cyan-50/40 to-violet-50/40">
       <Sidebar user={user} onLogout={onLogout} />
 
-      <main className="flex-1 p-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex items-center justify-between mb-6">
-            <h1 className="text-2xl font-bold text-gray-900">My Listings</h1>
+      <main className="min-w-0 flex-1 p-4 sm:p-6 lg:p-8">
+        <div className="mx-auto max-w-7xl">
+          <div className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-3xl bg-gradient-to-r from-cyan-600 via-teal-500 to-emerald-500 p-5 text-white shadow-lg shadow-cyan-200/60 sm:p-6">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-50">Seller workspace</p>
+              <h1 className="mt-1 text-2xl font-bold">My Listings</h1>
+              <p className="mt-1 text-sm text-white/80">Manage your textile materials and offers.</p>
+            </div>
             <button
               onClick={() => navigate('/upload-textile-waste')}
-              className="bg-cyan-500 text-white px-4 py-2 rounded-lg hover:bg-cyan-600 transition-colors"
+              className="rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-teal-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-cyan-50"
             >
               + Add New Listing
             </button>
           </div>
 
           {/* Filters */}
-          <div className="bg-white rounded-xl p-4 shadow-sm mb-6">
-            <div className="flex gap-4">
+          <div className="mb-6 rounded-2xl border border-white bg-white/90 p-4 shadow-md shadow-slate-200/40 ring-1 ring-slate-100">
+            <div className="flex flex-col gap-3 sm:flex-row">
               <div className="flex-1">
                 <input
                   type="text"
                   placeholder="Search listings..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-cyan-400 focus:border-transparent"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm outline-none transition focus:border-cyan-400 focus:bg-white focus:ring-4 focus:ring-cyan-100"
                 />
               </div>
               <select
                 value={filter}
                 onChange={(e) => setFilter(e.target.value)}
-                className="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-cyan-400 focus:border-transparent"
+                className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm outline-none transition focus:border-cyan-400 focus:bg-white focus:ring-4 focus:ring-cyan-100"
               >
                 <option value="all">All Status</option>
                 <option value="available">Available</option>
@@ -179,14 +183,14 @@ const MyListings = ({ user, onLogout }: MyListingsProps) => {
               <p className="text-gray-500">Loading listings...</p>
             </div>
           ) : loadError ? (
-            <div className="bg-red-50 border border-red-100 rounded-xl p-12 text-center">
+            <div className="rounded-2xl border border-rose-100 bg-rose-50 p-10 text-center shadow-sm">
               <p className="text-red-600 mb-4">{loadError}</p>
               <button onClick={fetchListings} className="text-cyan-600 hover:text-cyan-700 font-medium">
                 Try again
               </button>
             </div>
           ) : filteredListings.length === 0 ? (
-            <div className="bg-white rounded-xl p-12 shadow-sm text-center">
+            <div className="rounded-2xl border border-white bg-white/90 p-10 text-center shadow-md ring-1 ring-slate-100">
               <p className="text-gray-500 mb-4">No listings found</p>
               <button
                 onClick={() => navigate('/upload-textile-waste')}
@@ -196,63 +200,64 @@ const MyListings = ({ user, onLogout }: MyListingsProps) => {
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
               {filteredListings.map((listing) => (
-                <div key={listing._id} className="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow">
-                  <div className="relative">
+                <div key={listing._id} className="group overflow-hidden rounded-2xl border border-white bg-white shadow-md shadow-slate-200/50 ring-1 ring-slate-100 transition duration-200 hover:-translate-y-1 hover:shadow-xl">
+                  <div className="relative h-32 overflow-hidden bg-gradient-to-br from-cyan-100 to-violet-100 sm:h-36">
                     <img
                       src={listing.imageUrl || '/hero_textile.png'}
                       alt={listing.title}
-                      className="w-full h-48 object-cover"
+                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                     />
-                    <span className={`absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(listing.status)}`}>
+                    <span className={`absolute right-2.5 top-2.5 rounded-full px-2.5 py-1 text-[11px] font-bold shadow-sm ${getStatusColor(listing.status)}`}>
                       {listing.status.charAt(0).toUpperCase() + listing.status.slice(1)}
                     </span>
                   </div>
                   
-                  <div className="p-4">
-                    <h3 className="font-semibold text-lg mb-2">{listing.title}</h3>
-                    <div className="space-y-2 text-sm">
+                  <div className="p-3.5 sm:p-4">
+                    <div className="mb-3 flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-cyan-700">{listing.category}</p>
+                        <h3 className="mt-0.5 truncate font-bold text-slate-900">{listing.title}</h3>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-x-3 gap-y-2 rounded-xl bg-slate-50/80 p-3 text-xs">
                       <div className="flex justify-between">
-                        <span className="text-gray-500">Category:</span>
-                        <span className="font-medium">{listing.category}</span>
+                        <span className="text-slate-500">Condition</span>
+                        <span className="text-right font-semibold text-slate-800">{listing.condition}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-gray-500">Condition:</span>
-                        <span className="font-medium">{listing.condition}</span>
+                        <span className="text-slate-500">Quantity</span>
+                        <span className="text-right font-semibold text-slate-800">{listing.quantity} kg</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-gray-500">Quantity:</span>
-                        <span className="font-medium">{listing.quantity} KG</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-500">Price:</span>
-                        <span className="font-medium text-cyan-600">LKR {listing.price}/KG</span>
+                        <span className="text-slate-500">Price / kg</span>
+                        <span className="text-right font-bold text-teal-700">LKR {listing.price}</span>
                       </div>
                       {listing.healthScore && (
                         <div className="flex justify-between">
-                          <span className="text-gray-500">Health Score:</span>
-                          <span className={`font-medium ${getHealthScoreColor(listing.healthScore)}`}>
+                          <span className="text-slate-500">Health score</span>
+                          <span className={`text-right font-semibold ${getHealthScoreColor(listing.healthScore)}`}>
                             {listing.healthScore.toFixed(2)}
                           </span>
                         </div>
                       )}
                       <div className="flex justify-between">
-                        <span className="text-gray-500">Location:</span>
-                        <span className="font-medium text-xs">{listing.location}</span>
+                        <span className="text-slate-500">Location</span>
+                        <span className="truncate text-right font-semibold text-slate-700" title={listing.location}>{listing.location}</span>
                       </div>
                     </div>
                     
-                    <div className="mt-4 pt-4 border-t flex gap-2">
+                    <div className="mt-3 flex gap-2 border-t border-slate-100 pt-3">
                       <button
-                        className="flex-1 bg-cyan-500 text-white py-2 rounded-lg hover:bg-cyan-600 transition-colors text-sm"
+                        className="flex-1 rounded-xl bg-gradient-to-r from-cyan-600 to-teal-500 py-2 text-xs font-bold text-white shadow-sm transition hover:shadow-md"
                         onClick={() => navigate('/sustainability-analysis')}
                       >
                         View Details
                       </button>
                       {listing.status === 'available' && (
                         <button
-                          className="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm"
+                          className="rounded-xl border border-violet-200 bg-violet-50 px-4 py-2 text-xs font-semibold text-violet-700 transition hover:bg-violet-100"
                           onClick={() => openEditModal(listing)}
                         >
                           Edit
@@ -271,16 +276,16 @@ const MyListings = ({ user, onLogout }: MyListingsProps) => {
               <button
                 onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                 disabled={currentPage === 1}
-                className="px-4 py-2 border rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Previous
               </button>
-              <span className="px-4 py-2 bg-cyan-500 text-white rounded-lg">
+              <span className="rounded-xl bg-gradient-to-r from-cyan-600 to-teal-500 px-4 py-2 text-sm font-bold text-white shadow-sm">
                 {currentPage}
               </span>
               <button
                 onClick={() => setCurrentPage(currentPage + 1)}
-                className="px-4 py-2 border rounded-lg hover:bg-gray-50"
+                className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50"
               >
                 Next
               </button>

@@ -17,6 +17,7 @@ const notificationSchema = new mongoose.Schema(
         'new_order',          // seller: you received an order
         'order_status_changed', // buyer: seller updated your order's status
         'inquiry_received',   // seller: a buyer messaged you
+        'inquiry_replied',    // buyer: seller replied to your inquiry
         'listing_sold_out',   // seller: a listing hit 0 quantity
         'user_registered',    // admin/super_admin: a new account signed up
         'account_status_changed', // buyer/seller: your account was suspended/reactivated

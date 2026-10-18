@@ -19,6 +19,7 @@ const AIIntelligenceCards = () => {
       icon: <DollarSign size={20} />,
       path: '/price-prediction',
       className: 'bg-sky-50 text-sky-600',
+      borderClass: 'border-sky-100 hover:border-sky-200',
     },
     {
       title: 'Buyer Recommendation',
@@ -26,6 +27,7 @@ const AIIntelligenceCards = () => {
       icon: <Users size={20} />,
       path: '/buyer-recommendation',
       className: 'bg-violet-50 text-violet-600',
+      borderClass: 'border-violet-100 hover:border-violet-200',
     },
     {
       title: 'Demand Prediction',
@@ -33,6 +35,7 @@ const AIIntelligenceCards = () => {
       icon: <BarChart3 size={20} />,
       path: '/demand-prediction',
       className: 'bg-amber-50 text-amber-600',
+      borderClass: 'border-amber-100 hover:border-amber-200',
     },
     {
       title: 'Listing Success',
@@ -40,6 +43,7 @@ const AIIntelligenceCards = () => {
       icon: <Sparkles size={20} />,
       path: '/marketplace-analysis',
       className: 'bg-emerald-50 text-emerald-600',
+      borderClass: 'border-emerald-100 hover:border-emerald-200',
     },
     {
       title: 'Sales Time',
@@ -47,13 +51,15 @@ const AIIntelligenceCards = () => {
       icon: <Clock3 size={20} />,
       path: '/marketplace-analysis',
       className: 'bg-rose-50 text-rose-600',
+      borderClass: 'border-rose-100 hover:border-rose-200',
     },
     {
       title: 'Market Trend',
-      description: 'See increasing, stable or decreasing trends',
+      description: 'See increasing, Stable or decreasing trends',
       icon: <TrendingUp size={20} />,
       path: '/marketplace-analysis',
       className: 'bg-cyan-50 text-cyan-600',
+      borderClass: 'border-cyan-100 hover:border-cyan-200',
     },
   ];
 
@@ -88,7 +94,7 @@ const AIIntelligenceCards = () => {
             key={item.title}
             type="button"
             onClick={() => navigate(item.path)}
-            className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all text-left"
+            className={`rounded-2xl border bg-white/90 p-5 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md ${item.borderClass}`}
           >
             <div className="flex items-start justify-between gap-3">
               <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${item.className}`}>

@@ -28,7 +28,9 @@ export const analyzeTextileWaste = asyncHandler(async (req, res) => {
     );
   }
 
-  const imageUrls = files.map((f) => `/uploads/${path.basename(f.path)}`);
+  const imageUrls = files.map(
+    (f) => `${req.protocol}://${req.get('host')}/uploads/${path.basename(f.path)}`
+  );
 
   await Analysis.create({
     seller: req.user._id,

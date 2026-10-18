@@ -11,6 +11,7 @@ import { analyzeImagesCombined, guessMimeType } from '../utils/aiCombine.js';
 import { UPLOADS_DIR } from '../middleware/upload.js';
 import { logTraceabilityEvent } from '../utils/traceability.js';
 import { computeScenarioComparison } from '../utils/scenarios.js';
+import { createNotification } from '../utils/notifications.js';
 
 // Same weighting the frontend used for its client-side estimate, kept here
 // so every material gets a consistent score regardless of which flow
@@ -173,7 +174,7 @@ export const updateMaterial = asyncHandler(async (req, res) => {
     res.status(404);
     throw new Error('Material not found');
   }
-  if (material.seller.toString() !== req.user._id.toString() && !['admin', 'super_admin'].includes(req.user.role)) {
+  if (material.seller.toString() !== req.user._id.toString() && req.user.role !== 'super_admin') {
     res.status(403);
     throw new Error('Not authorized to update this listing');
   }
@@ -238,7 +239,7 @@ export const regradeMaterial = asyncHandler(async (req, res) => {
     res.status(404);
     throw new Error('Material not found');
   }
-  if (material.seller.toString() !== req.user._id.toString() && !['admin', 'super_admin'].includes(req.user.role)) {
+  if (material.seller.toString() !== req.user._id.toString() && req.user.role !== 'super_admin') {
     res.status(403);
     throw new Error('Not authorized to update this listing');
   }
@@ -275,7 +276,7 @@ export const reanalyzeMaterial = asyncHandler(async (req, res) => {
     res.status(404);
     throw new Error('Material not found');
   }
-  if (material.seller.toString() !== req.user._id.toString() && !['admin', 'super_admin'].includes(req.user.role)) {
+  if (material.seller.toString() !== req.user._id.toString() && req.user.role !== 'super_admin') {
     res.status(403);
     throw new Error('Not authorized to update this listing');
   }
@@ -368,7 +369,7 @@ export const deleteMaterial = asyncHandler(async (req, res) => {
     res.status(404);
     throw new Error('Material not found');
   }
-  if (material.seller.toString() !== req.user._id.toString() && !['admin', 'super_admin'].includes(req.user.role)) {
+  if (material.seller.toString() !== req.user._id.toString() && req.user.role !== 'super_admin') {
     res.status(403);
     throw new Error('Not authorized to delete this listing');
   }
@@ -399,6 +400,12 @@ export const inquireAboutMaterial = asyncHandler(async (req, res) => {
     buyer: req.user._id,
     message: message.trim(),
   });
+
+  await createNotification(
+    material.seller, 'inquiry_received', 'New Inquiry',
+    `${req.user.name} asked about "${material.title}".`,
+    '/seller-inquiries', material._id
+  );
 
   res.status(201).json({
     message: `Inquiry submitted successfully! ${material.sellerName} will contact you at ${req.user.email}.`,

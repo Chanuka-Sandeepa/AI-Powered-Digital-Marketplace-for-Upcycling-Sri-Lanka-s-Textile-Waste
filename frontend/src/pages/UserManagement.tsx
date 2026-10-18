@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
-import { Search, Ban, CheckCircle2, Trash2, ShieldAlert } from 'lucide-react';
+import { useState, useEffect, type FormEvent } from 'react';
+import { Search, Ban, CheckCircle2, Trash2, ShieldAlert, UserPlus } from 'lucide-react';
 import AdminSidebar from '../components/dashboard/AdminSidebar';
-import { getUsers, updateUserStatus, updateUserRole, deleteUser } from '../services/adminApi';
+import { createAdminAccount, getUsers, updateUserStatus, updateUserRole, deleteUser } from '../services/adminApi';
 import type { AdminUserRecord } from '../services/adminApi';
 import type { User } from '../types';
 
@@ -29,6 +29,9 @@ const UserManagement = ({ user: currentUser, onLogout }: UserManagementProps) =>
   const [pages, setPages] = useState(1);
   const [actionError, setActionError] = useState('');
   const [pendingId, setPendingId] = useState('');
+  const [showAdminForm, setShowAdminForm] = useState(false);
+  const [adminForm, setAdminForm] = useState({ name: '', email: '', password: '' });
+  const [adminCreatedMessage, setAdminCreatedMessage] = useState('');
 
   const fetchUsers = async (p = 1) => {
     try {
@@ -97,22 +100,67 @@ const UserManagement = ({ user: currentUser, onLogout }: UserManagementProps) =>
     }
   };
 
+  const handleCreateAdmin = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setActionError('');
+    setAdminCreatedMessage('');
+    setPendingId('new-admin');
+    try {
+      await createAdminAccount(adminForm);
+      setAdminForm({ name: '', email: '', password: '' });
+      setShowAdminForm(false);
+      setAdminCreatedMessage('Admin account created. Share the initial password securely.');
+      setRoleFilter('admin');
+      if (roleFilter === 'admin') await fetchUsers(1);
+    } catch (error: any) {
+      setActionError(error?.response?.data?.message || 'Could not create the admin account.');
+    } finally {
+      setPendingId('');
+    }
+  };
+
   return (
-    <div className="flex min-h-screen bg-[#F8FAFC] font-sans">
+    <div className="flex min-h-screen bg-gradient-to-br from-slate-50 via-sky-50/40 to-violet-50/40 font-sans">
       <AdminSidebar user={currentUser} onLogout={onLogout} />
 
-      <main className="flex-1 p-6 md:p-8">
-        <div className="max-w-6xl mx-auto space-y-6">
-          <div className="border-b border-gray-200 pb-5">
-            <h1 className="text-3xl font-bold text-gray-900">User Management</h1>
-            <p className="text-gray-500 text-sm mt-0.5">
+      <main className="min-w-0 flex-1 p-4 md:p-8">
+        <div className="mx-auto max-w-7xl space-y-6">
+          <header className={`rounded-3xl bg-gradient-to-r ${isSuperAdmin ? 'from-violet-700 via-indigo-600 to-sky-600' : 'from-teal-700 via-cyan-600 to-sky-600'} p-6 text-white shadow-lg`}>
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-white/75">{isSuperAdmin ? 'Platform administration' : 'Account support'}</p>
+            <h1 className="mt-2 text-3xl font-extrabold">{isSuperAdmin ? 'People & Roles' : 'Buyers & Sellers'}</h1>
+            <p className="mt-2 text-sm text-white/85">
               {isSuperAdmin
-                ? 'Full control: suspend, change roles, or delete any account.'
+                ? 'Platform control: create admins, manage roles, and oversee all accounts.'
                 : 'Suspend or reactivate buyer and seller accounts.'}
             </p>
-          </div>
+          </header>
 
-          <div className="bg-white rounded-2xl p-4 border border-gray-200 shadow-sm flex flex-col md:flex-row gap-3">
+          {isSuperAdmin && (
+            <section className="overflow-hidden rounded-2xl border border-violet-100 bg-gradient-to-r from-violet-50 via-white to-sky-50 shadow-sm">
+              <div className="flex flex-wrap items-center justify-between gap-3 p-5">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-wider text-violet-700">Super admin control</p>
+                  <h2 className="mt-1 font-bold text-slate-900">Admin accounts</h2>
+                  <p className="mt-1 text-sm text-slate-500">Create operational admins. Only super admins can grant privileged roles.</p>
+                </div>
+                <button type="button" onClick={() => setShowAdminForm((open) => !open)} className="inline-flex items-center gap-2 rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-violet-700">
+                  <UserPlus className="h-4 w-4" /> {showAdminForm ? 'Close form' : 'Create admin'}
+                </button>
+              </div>
+              {showAdminForm && (
+                <form onSubmit={handleCreateAdmin} className="grid gap-3 border-t border-violet-100 bg-white/80 p-5 sm:grid-cols-2">
+                  <input required maxLength={100} value={adminForm.name} onChange={(event) => setAdminForm((form) => ({ ...form, name: event.target.value }))} placeholder="Admin full name" className="rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-violet-400 focus:ring-4 focus:ring-violet-100" />
+                  <input required type="email" value={adminForm.email} onChange={(event) => setAdminForm((form) => ({ ...form, email: event.target.value }))} placeholder="Admin email" className="rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-violet-400 focus:ring-4 focus:ring-violet-100" />
+                  <input required minLength={8} type="password" autoComplete="new-password" value={adminForm.password} onChange={(event) => setAdminForm((form) => ({ ...form, password: event.target.value }))} placeholder="Initial password (8+ characters)" className="rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-violet-400 focus:ring-4 focus:ring-violet-100" />
+                  <button type="submit" disabled={pendingId === 'new-admin'} className="rounded-xl bg-gradient-to-r from-violet-600 to-sky-600 px-4 py-2.5 text-sm font-bold text-white disabled:opacity-50">{pendingId === 'new-admin' ? 'Creating account…' : 'Create admin account'}</button>
+                </form>
+              )}
+            </section>
+          )}
+
+          {adminCreatedMessage && <div role="status" className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">{adminCreatedMessage}</div>}
+
+          <div className="flex flex-col gap-3 rounded-2xl border border-white bg-white/90 p-4 shadow-sm ring-1 ring-slate-100 md:flex-row">
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
               <input
@@ -121,23 +169,23 @@ const UserManagement = ({ user: currentUser, onLogout }: UserManagementProps) =>
                 onChange={(e) => setSearch(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && fetchUsers(1)}
                 placeholder="Search by name or email..."
-                className="w-full pl-9 pr-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-rose-400 focus:border-transparent text-sm"
+                className="w-full rounded-xl border border-slate-200 py-2.5 pl-9 pr-4 text-sm outline-none focus:border-violet-400 focus:ring-4 focus:ring-violet-100"
               />
             </div>
             <select
               value={roleFilter}
               onChange={(e) => setRoleFilter(e.target.value)}
-              className="px-4 py-2.5 border border-gray-200 rounded-xl text-sm"
+              className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-violet-400 focus:ring-4 focus:ring-violet-100"
             >
               <option value="all">All Roles</option>
               <option value="buyer">Buyers</option>
               <option value="seller">Sellers</option>
-              <option value="admin">Admins</option>
+              {isSuperAdmin && <option value="admin">Admins</option>}
               {isSuperAdmin && <option value="super_admin">Super Admins</option>}
             </select>
             <button
               onClick={() => fetchUsers(1)}
-              className="bg-rose-500 hover:bg-rose-600 text-white px-5 py-2.5 rounded-xl text-sm font-medium transition-all"
+              className={`rounded-xl px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:shadow-md ${isSuperAdmin ? 'bg-violet-600 hover:bg-violet-700' : 'bg-teal-600 hover:bg-teal-700'}`}
             >
               Search
             </button>
@@ -165,9 +213,9 @@ const UserManagement = ({ user: currentUser, onLogout }: UserManagementProps) =>
             </div>
           ) : (
             <>
-              <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-                <table className="w-full text-sm">
-                  <thead className="bg-gray-50 text-gray-500 text-xs uppercase">
+              <div className="overflow-x-auto rounded-2xl border border-white bg-white shadow-sm ring-1 ring-slate-100">
+                <table className="w-full min-w-[680px] text-sm">
+                  <thead className={`text-xs uppercase text-slate-600 ${isSuperAdmin ? 'bg-violet-50' : 'bg-teal-50'}`}>
                     <tr>
                       <th className="text-left px-5 py-3 font-semibold">User</th>
                       <th className="text-left px-5 py-3 font-semibold">Role</th>
@@ -175,7 +223,7 @@ const UserManagement = ({ user: currentUser, onLogout }: UserManagementProps) =>
                       <th className="text-right px-5 py-3 font-semibold">Actions</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-100">
+                  <tbody className="divide-y divide-slate-100">
                     {users.map((u) => {
                       const isSelf = u._id === currentUser._id;
                       const isTargetSuperAdmin = u.role === 'super_admin';
