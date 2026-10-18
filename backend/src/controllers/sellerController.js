@@ -2,8 +2,71 @@ import asyncHandler from 'express-async-handler';
 import mongoose from 'mongoose';
 import Material from '../models/Material.js';
 import User from '../models/User.js';
+import Review from '../models/Review.js';
+import Order from '../models/Order.js';
+import Inquiry from '../models/Inquiry.js';
+import { createNotification } from '../utils/notifications.js';
 
 const sellerMatch = (userId) => ({ seller: new mongoose.Types.ObjectId(userId) });
+
+// @route GET /api/seller/inquiries
+export const getSellerInquiries = asyncHandler(async (req, res) => {
+  const pageNum = Math.max(1, Number(req.query.page) || 1);
+  const limitNum = Math.min(50, Math.max(1, Number(req.query.limit) || 20));
+  const filter = { seller: req.user._id };
+  const [inquiries, total, openCount] = await Promise.all([
+    Inquiry.find(filter)
+      .sort({ createdAt: -1 })
+      .skip((pageNum - 1) * limitNum)
+      .limit(limitNum)
+      .populate('buyer', 'name email phone')
+      .populate('material', 'title imageUrl price status quantity category')
+      .lean(),
+    Inquiry.countDocuments(filter),
+    Inquiry.countDocuments({ ...filter, status: 'open' }),
+  ]);
+
+  res.json({ inquiries, page: pageNum, pages: Math.max(1, Math.ceil(total / limitNum)), total, openCount });
+});
+
+// @route POST /api/seller/inquiries/:id/reply
+export const replyToSellerInquiry = asyncHandler(async (req, res) => {
+  const reply = typeof req.body.reply === 'string' ? req.body.reply.trim() : '';
+  if (!reply) {
+    res.status(400);
+    throw new Error('Please write a reply before sending.');
+  }
+  if (reply.length > 2000) {
+    res.status(400);
+    throw new Error('Replies must be 2,000 characters or fewer.');
+  }
+
+  const inquiry = await Inquiry.findOne({ _id: req.params.id, seller: req.user._id });
+  if (!inquiry) {
+    res.status(404);
+    throw new Error('Inquiry not found.');
+  }
+  if (inquiry.status === 'closed') {
+    res.status(409);
+    throw new Error('This inquiry is closed and can no longer be replied to.');
+  }
+
+  inquiry.sellerReply = reply;
+  inquiry.repliedAt = new Date();
+  inquiry.status = 'responded';
+  await inquiry.save();
+
+  await createNotification(
+    inquiry.buyer,
+    'inquiry_replied',
+    'Seller replied to your inquiry',
+    'A seller replied to your message. Open My Inquiries to read it.',
+    '/my-inquiries',
+    inquiry._id
+  );
+
+  res.json({ message: 'Reply sent successfully.', inquiry });
+});
 
 // @route GET /api/seller/stats
 export const getSellerStats = asyncHandler(async (req, res) => {
@@ -244,18 +307,49 @@ export const getSustainabilityMetrics = asyncHandler(async (req, res) => {
 
 // @route GET /api/seller/profile
 export const getSellerProfile = asyncHandler(async (req, res) => {
-  const [statsAgg] = await Material.aggregate([
+  const [[statsAgg], [salesAgg], [ratingAgg], reviews, availableMaterials] = await Promise.all([
+    Material.aggregate([
     { $match: sellerMatch(req.user._id) },
     {
       $group: {
         _id: null,
         totalListings: { $sum: 1 },
-        totalSales: { $sum: { $cond: [{ $eq: ['$status', 'sold'] }, 1, 0] } },
-        totalRevenue: {
-          $sum: { $cond: [{ $eq: ['$status', 'sold'] }, { $multiply: ['$quantity', '$price'] }, 0] },
-        },
+        availableListings: { $sum: { $cond: [{ $eq: ['$status', 'available'] }, 1, 0] } },
+        soldListings: { $sum: { $cond: [{ $eq: ['$status', 'sold'] }, 1, 0] } },
       },
     },
+    ]),
+    Order.aggregate([
+      {
+        $match: {
+          seller: new mongoose.Types.ObjectId(req.user._id),
+          orderStatus: 'delivered',
+          paymentStatus: { $ne: 'failed' },
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          totalSales: { $sum: 1 },
+          totalRevenue: { $sum: '$subtotal' },
+          quantitySold: { $sum: '$quantityKg' },
+        },
+      },
+    ]),
+    Review.aggregate([
+      { $match: { reviewee: new mongoose.Types.ObjectId(req.user._id), reviewerRole: 'buyer' } },
+      { $group: { _id: null, averageRating: { $avg: '$rating' }, reviewCount: { $sum: 1 } } },
+    ]),
+    Review.find({ reviewee: req.user._id, reviewerRole: 'buyer' })
+      .sort({ createdAt: -1 })
+      .limit(20)
+      .populate('reviewer', 'name avatar')
+      .lean(),
+    Material.find({ ...sellerMatch(req.user._id), status: 'available' })
+      .sort({ updatedAt: -1, createdAt: -1 })
+      .limit(6)
+      .select('title category condition quantity price location imageUrl status updatedAt')
+      .lean(),
   ]);
 
   res.json({
@@ -266,11 +360,15 @@ export const getSellerProfile = asyncHandler(async (req, res) => {
     avatar: req.user.avatar,
     memberSince: req.user.createdAt,
     totalListings: statsAgg?.totalListings || 0,
-    totalSales: statsAgg?.totalSales || 0,
-    totalRevenue: statsAgg?.totalRevenue || 0,
-    // No review/messaging system exists yet to back these with real data;
-    // reported as null rather than a fabricated number.
-    averageRating: null,
+    availableListings: statsAgg?.availableListings || 0,
+    soldListings: statsAgg?.soldListings || 0,
+    totalSales: salesAgg?.totalSales || 0,
+    totalRevenue: salesAgg?.totalRevenue || 0,
+    quantitySold: salesAgg?.quantitySold || 0,
+    availableMaterials,
+    averageRating: ratingAgg?.averageRating != null ? Math.round(ratingAgg.averageRating * 10) / 10 : null,
+    reviewCount: ratingAgg?.reviewCount || 0,
+    reviews,
     responseRate: null,
   });
 });

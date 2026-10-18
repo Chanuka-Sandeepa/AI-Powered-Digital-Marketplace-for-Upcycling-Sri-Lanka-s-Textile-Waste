@@ -46,12 +46,9 @@ const orderSchema = new mongoose.Schema(
 
     deliveryAddress: { type: deliveryAddressSchema, required: true },
 
-    // "card" is a simulated/demo payment (no real payment gateway
-    // integration exists) - collected for UI realism and marked paid
-    // immediately. "cash" is cash-on-delivery, paymentStatus stays
-    // pending until the seller marks it received.
+    paymentReference: { type: String, index: true },
     paymentMethod: { type: String, enum: ['card', 'cash'], required: true },
-    paymentStatus: { type: String, enum: ['pending', 'paid'], default: 'pending' },
+    paymentStatus: { type: String, enum: ['pending', 'paid', 'failed'], default: 'pending' },
 
     orderStatus: {
       type: String,

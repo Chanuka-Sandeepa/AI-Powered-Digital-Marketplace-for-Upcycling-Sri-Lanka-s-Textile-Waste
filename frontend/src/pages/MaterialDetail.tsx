@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
-  ArrowLeft, MapPin, ShieldCheck, Leaf, PackageSearch, Send, CheckCircle2, Layers, ShoppingCart, Minus, Plus,
+  ArrowLeft, MapPin, ShieldCheck, Leaf, PackageSearch, Send, CheckCircle2, Layers, ShoppingCart, Minus, Plus, MessageSquare,
 } from 'lucide-react';
 import BuyerSidebar from '../components/dashboard/BuyerSidebar';
 import { getListingDetail, submitInquiry, getListingScenarios } from '../services/buyerApi';
@@ -29,6 +29,7 @@ const MaterialDetail = ({ user, onLogout }: MaterialDetailProps) => {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
   const [scenarios, setScenarios] = useState<ScenarioComparisonResult | null>(null);
+  const [selectedAction, setSelectedAction] = useState<string | null>(null);
   const [cartQty, setCartQty] = useState(1);
   const [addedToCart, setAddedToCart] = useState(false);
 
@@ -180,6 +181,13 @@ const MaterialDetail = ({ user, onLogout }: MaterialDetailProps) => {
                       {addedToCart ? <CheckCircle2 className="w-4 h-4" /> : <ShoppingCart className="w-4 h-4" />}
                       {addedToCart ? 'Added to Cart' : `Add to Cart - LKR ${(listing.price * cartQty).toLocaleString()}`}
                     </button>
+                    <button
+                      type="button"
+                      onClick={() => document.getElementById('contact-seller')?.scrollIntoView({ behavior: 'smooth', block: 'center' })}
+                      className="flex items-center justify-center gap-2 rounded-xl border border-cyan-200 bg-cyan-50 px-5 py-3 text-sm font-semibold text-cyan-800 transition hover:border-cyan-300 hover:bg-cyan-100"
+                    >
+                      <MessageSquare className="h-4 w-4" /> Contact Seller
+                    </button>
                     {cartItems.some((i) => i.materialId === listing._id) && (
                       <button
                         onClick={() => navigate('/cart')}
@@ -194,13 +202,10 @@ const MaterialDetail = ({ user, onLogout }: MaterialDetailProps) => {
 
               {listing.aiAnalysis && (
                 <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
-                  <div className="flex items-center justify-between mb-4">
+                  <div className="mb-4">
                     <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
                       <ShieldCheck className="w-5 h-5 text-sky-500" /> Fabric Intelligence
                     </h2>
-                    <span className="text-[10px] font-semibold text-sky-700 bg-sky-50 px-2.5 py-1 rounded-full border border-sky-100">
-                      Member 1
-                    </span>
                   </div>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <Stat label="Fabric Type" value={listing.aiAnalysis.fabricType} />
@@ -213,13 +218,10 @@ const MaterialDetail = ({ user, onLogout }: MaterialDetailProps) => {
 
               {listing.sustainability && (
                 <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
-                  <div className="flex items-center justify-between mb-4">
+                  <div className="mb-4">
                     <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
                       <Leaf className="w-5 h-5 text-emerald-500" /> Sustainability Impact
                     </h2>
-                    <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-100">
-                      Member 2
-                    </span>
                   </div>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <Stat label="CO2 Saved" value={`${listing.sustainability.co2SavedKg} kg`} />
@@ -237,24 +239,29 @@ const MaterialDetail = ({ user, onLogout }: MaterialDetailProps) => {
                   </h2>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                     {scenarios.scenarios.map((s) => (
-                      <div
+                      <button
+                        type="button"
                         key={s.action}
-                        className={`rounded-xl p-3 border-2 text-sm ${s.action === scenarios.recommendedAction ? 'border-emerald-300 bg-emerald-50' : 'border-gray-100 bg-gray-50'}`}
+                        aria-pressed={selectedAction === s.action}
+                        onClick={() => setSelectedAction(s.action)}
+                        className={`rounded-xl p-3 border-2 text-left text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-offset-2 ${selectedAction === s.action ? 'border-emerald-500 bg-emerald-50' : s.action === scenarios.recommendedAction ? 'border-emerald-200 bg-emerald-50/50 hover:border-emerald-400' : 'border-gray-100 bg-gray-50 hover:border-emerald-300 hover:bg-emerald-50/40'}`}
                       >
                         <p className="font-bold text-gray-900">{s.action}</p>
                         <p className="text-xs text-gray-500 mt-1">{s.co2SavedKg} kg CO2 · {s.waterSavedLiters} L water saved</p>
-                      </div>
+                      </button>
                     ))}
                   </div>
                 </div>
               )}
 
-              <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
-                <h2 className="text-lg font-bold text-gray-900 mb-3">Contact Seller</h2>
+              <div id="contact-seller" className="scroll-mt-6 rounded-2xl border border-cyan-100 bg-gradient-to-br from-white to-cyan-50/60 p-6 shadow-md shadow-cyan-100/50">
+                <h2 className="mb-1 flex items-center gap-2 text-lg font-bold text-gray-900"><MessageSquare className="h-5 w-5 text-cyan-700" /> Contact Seller</h2>
+                <p className="mb-3 text-sm text-gray-500">Ask about samples, packing, availability, or anything else before you order.</p>
                 {sent ? (
-                  <div className="flex items-center gap-2 text-emerald-600 bg-emerald-50 rounded-xl p-4">
+                  <div className="flex flex-col items-start gap-3 rounded-xl border border-emerald-100 bg-emerald-50 p-4 text-emerald-700 sm:flex-row sm:items-center">
                     <CheckCircle2 className="w-5 h-5" />
-                    <p className="text-sm font-medium">Your inquiry has been sent to {listing.sellerName}.</p>
+                    <div className="flex-1"><p className="text-sm font-semibold">Your inquiry has been sent to {listing.sellerName}.</p><p className="mt-0.5 text-xs text-emerald-700/80">You can track it from your buyer dashboard.</p></div>
+                    <button type="button" onClick={() => navigate('/my-inquiries')} className="rounded-lg bg-white px-3 py-2 text-xs font-bold text-emerald-800 shadow-sm ring-1 ring-emerald-200 hover:bg-emerald-100">View My Inquiries</button>
                   </div>
                 ) : (
                   <form onSubmit={handleInquire} className="space-y-3">

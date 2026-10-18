@@ -143,7 +143,7 @@ export const analyzeMarketplace = asyncHandler(async (req, res) => {
       res.status(404);
       throw new Error('Material not found');
     }
-    if (material.seller.toString() !== req.user._id.toString() && !['admin', 'super_admin'].includes(req.user.role)) {
+    if (material.seller.toString() !== req.user._id.toString() && req.user.role !== 'super_admin') {
       res.status(403);
       throw new Error('Not authorized to analyze this listing');
     }

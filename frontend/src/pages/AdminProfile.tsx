@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { User as UserIcon, Mail, Phone, Save } from 'lucide-react';
+import { User as UserIcon, Mail, Phone, Save, ShieldCheck } from 'lucide-react';
 import AdminSidebar from '../components/dashboard/AdminSidebar';
 import API from '../services/api';
 import type { User } from '../types';
@@ -38,27 +38,29 @@ const AdminProfile = ({ user, onLogout, onProfileUpdated }: AdminProfileProps) =
   };
 
   return (
-    <div className="flex min-h-screen bg-[#F8FAFC] font-sans">
+    <div className="flex min-h-screen bg-gradient-to-br from-slate-50 via-sky-50/40 to-violet-50/40 font-sans">
       <AdminSidebar user={user} onLogout={onLogout} />
 
-      <main className="flex-1 p-6 md:p-8">
-        <div className="max-w-2xl mx-auto space-y-6">
-          <div className="border-b border-gray-200 pb-5">
-            <h1 className="text-3xl font-bold text-gray-900">Profile</h1>
-            <p className="text-gray-500 text-sm mt-0.5">Your {user.role === 'super_admin' ? 'super admin' : 'admin'} account details.</p>
-          </div>
+      <main className="min-w-0 flex-1 p-4 md:p-8">
+        <div className="mx-auto max-w-3xl space-y-6">
+          <header className={`rounded-3xl bg-gradient-to-r ${user.role === 'super_admin' ? 'from-violet-700 via-indigo-600 to-sky-600' : 'from-teal-700 via-cyan-600 to-sky-600'} p-6 text-white shadow-lg`}>
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-white/75">Account settings</p>
+            <h1 className="mt-2 text-3xl font-extrabold">Admin Profile</h1>
+            <p className="mt-2 text-sm text-white/85">Manage the details shown for your {user.role === 'super_admin' ? 'super-admin' : 'admin'} account.</p>
+          </header>
 
-          <form onSubmit={handleSave} className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm space-y-4">
-            <div className="flex items-center gap-4 pb-4 border-b border-gray-100">
-              <div className="w-16 h-16 rounded-full bg-rose-100 flex items-center justify-center">
-                <UserIcon className="w-7 h-7 text-rose-600" />
+          <form onSubmit={handleSave} className="space-y-5 rounded-2xl border border-white bg-white/95 p-5 shadow-sm ring-1 ring-slate-100 sm:p-7">
+            <div className="flex items-center gap-4 border-b border-slate-100 pb-5">
+              <div className={`flex h-16 w-16 items-center justify-center rounded-2xl ${user.role === 'super_admin' ? 'bg-violet-100 text-violet-700' : 'bg-teal-100 text-teal-700'}`}>
+                <UserIcon className="h-7 w-7" />
               </div>
               <div>
                 <p className="font-semibold text-gray-900">{user.name}</p>
                 <p className="text-xs text-gray-400 flex items-center gap-1 mt-0.5">
                   <Mail className="w-3 h-3" /> {user.email}
                 </p>
-                <span className="inline-block mt-1 text-[10px] font-semibold text-rose-700 bg-rose-50 px-2 py-0.5 rounded-full uppercase">
+                <span className={`mt-1 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${user.role === 'super_admin' ? 'bg-violet-50 text-violet-700' : 'bg-teal-50 text-teal-700'}`}>
+                  <ShieldCheck className="h-3 w-3" />
                   {user.role.replace('_', ' ')}
                 </span>
               </div>
@@ -70,7 +72,7 @@ const AdminProfile = ({ user, onLogout, onProfileUpdated }: AdminProfileProps) =
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-rose-400 focus:border-transparent text-sm"
+                className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:border-violet-400 focus:ring-4 focus:ring-violet-100"
               />
             </div>
 
@@ -83,7 +85,7 @@ const AdminProfile = ({ user, onLogout, onProfileUpdated }: AdminProfileProps) =
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 placeholder="+94 7X XXX XXXX"
-                className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-rose-400 focus:border-transparent text-sm"
+                className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:border-violet-400 focus:ring-4 focus:ring-violet-100"
               />
             </div>
 
@@ -93,7 +95,7 @@ const AdminProfile = ({ user, onLogout, onProfileUpdated }: AdminProfileProps) =
             <button
               type="submit"
               disabled={isSaving}
-              className="flex items-center gap-2 bg-rose-500 hover:bg-rose-600 text-white px-5 py-2.5 rounded-xl text-sm font-medium transition-all shadow-sm disabled:opacity-50"
+              className={`flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:shadow-md disabled:opacity-50 ${user.role === 'super_admin' ? 'bg-violet-600 hover:bg-violet-700' : 'bg-teal-600 hover:bg-teal-700'}`}
             >
               <Save className="w-4 h-4" />
               {isSaving ? 'Saving...' : 'Save Changes'}
