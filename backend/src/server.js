@@ -14,12 +14,15 @@ import marketplaceRoutes from './routes/marketplaceRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 import orderRoutes from './routes/orderRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
+import reviewRoutes from './routes/reviewRoutes.js';
 import { notFound, errorHandler } from './middleware/errorMiddleware.js';
 import { checkMlServiceHealth } from './utils/mlClient.js';
 
-dotenv.config();
-
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+// Resolve the backend environment file from this source file so the server
+// works whether it is started from the backend folder or the project root.
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 await connectDB();
 
@@ -54,6 +57,7 @@ app.use('/api/marketplace', marketplaceRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/reviews', reviewRoutes);
 
 app.use(notFound);
 app.use(errorHandler);

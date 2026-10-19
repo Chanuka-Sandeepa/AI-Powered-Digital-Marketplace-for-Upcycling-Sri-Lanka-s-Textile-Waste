@@ -24,7 +24,7 @@ const CircularitySteps: React.FC = () => {
     }
   ];
 
-  <section id="circularity" className="w-full bg-white py-24">
+  return <section id="circularity" className="w-full bg-gradient-to-br from-amber-50 via-white to-cyan-50 py-24">
   <div className="w-full px-4 sm:px-6 lg:px-8">
 
     <div className="text-center">
@@ -45,9 +45,14 @@ const CircularitySteps: React.FC = () => {
       {steps.map((step, idx) => (
         <div
           key={idx}
-          className="relative flex flex-col items-center text-center p-6 bg-zinc-50/50 rounded-2xl border border-zinc-100 hover:bg-zinc-50 transition-colors"
+          className={`relative flex flex-col items-center rounded-2xl border p-6 text-center transition-colors ${[
+            'border-emerald-100 bg-emerald-50/80 hover:bg-emerald-100/70',
+            'border-cyan-100 bg-cyan-50/80 hover:bg-cyan-100/70',
+            'border-violet-100 bg-violet-50/80 hover:bg-violet-100/70',
+            'border-orange-100 bg-orange-50/80 hover:bg-orange-100/70',
+          ][idx]}`}
         >
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white border text-xs font-bold text-zinc-900 shadow-sm">
+          <div className={`flex h-12 w-12 items-center justify-center rounded-full border border-white bg-white text-xs font-bold shadow-sm ${['text-emerald-700', 'text-cyan-700', 'text-violet-700', 'text-orange-700'][idx]}`}>
             {step.num}
           </div>
 
@@ -63,7 +68,7 @@ const CircularitySteps: React.FC = () => {
     </div>
 
   </div>
-</section>
+</section>;
 };
 
 export default CircularitySteps;

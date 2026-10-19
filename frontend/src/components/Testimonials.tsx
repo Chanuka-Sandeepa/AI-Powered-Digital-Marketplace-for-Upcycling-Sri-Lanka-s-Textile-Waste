@@ -1,66 +1,72 @@
-import React from 'react';
+import { useEffect, useState } from 'react';
+import { Star } from 'lucide-react';
+import { getTopReviews, type ReviewRecord } from '../services/reviewApi';
 
-const Testimonials: React.FC = () => {
-  const testimonials = [
-    {
-      quote: 'The system integrated our garment waste streams immediately, saving us hours of logistics overheads and turning scrap cutouts into a solid auxiliary revenue stream.',
-      name: 'Hansani Perera',
-      role: 'Sustainability Manager, Hela Apparel',
-      image: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=150&q=80'
-    },
-    {
-      quote: 'Finding clean denim off-cuts for our artisan lifestyle lines used to be a scavenger hunt. TexCycle made the sourcing process transparent, direct, and traceable.',
-      name: 'Akash de Silva',
-      role: 'Founder, Circular Trends',
-      image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&q=80'
-    },
-    {
-      quote: 'This platform is the perfect catalyst for green industrial manufacturing in Sri Lanka. It provides real, verifiable proof-of-impact data for our compliance audits.',
-      name: 'Sajith Fernando',
-      role: 'CEO, Lanka Eco-Textiles',
-      image: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=150&q=80'
-    }
-  ];
+const Testimonials = () => {
+  const [reviews, setReviews] = useState<ReviewRecord[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    getTopReviews()
+      .then(setReviews)
+      .catch((error) => console.error('Could not load customer feedback:', error))
+      .finally(() => setLoading(false));
+  }, []);
 
   return (
-    <section id="testimonials" className="w-full bg-zinc-50 py-24 border-t border-gray-100">
-      <div className="w-full w-full px-4 sm:px-6 lg:px-8">
-        
-        {/* Section Header */}
+    <section id="testimonials" className="w-full border-t border-violet-100 bg-gradient-to-br from-violet-50 via-white to-rose-50 py-24">
+      <div className="w-full px-4 sm:px-6 lg:px-8">
         <div className="text-center">
-          <p className="text-xs font-semibold uppercase tracking-wider text-emerald-600">Impact stories</p>
-          <h2 className="mt-2 text-3xl font-bold tracking-tight text-zinc-900 sm:text-4xl">Voices of Change</h2>
+          <p className="text-xs font-semibold uppercase tracking-wider text-violet-600">Community feedback</p>
+          <h2 className="mt-2 text-3xl font-bold tracking-tight text-zinc-900 sm:text-4xl">Reviews from real transactions</h2>
           <p className="mx-auto mt-4 max-w-xl text-sm text-zinc-500">
-            Hear from sustainability officers, fashion founders, and entrepreneurs driving circularity.
+            Buyers and sellers can rate their experience after an order is delivered.
           </p>
         </div>
 
-        {/* Testimonials Grid */}
-        <div className="mt-16 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-          {testimonials.map((test, idx) => (
-            <div 
-              key={idx}
-              className="flex flex-col justify-between rounded-2xl border border-gray-155 bg-white p-8 shadow-sm hover:shadow-md hover-lift transition-all"
-            >
-              <p className="text-sm italic leading-relaxed text-zinc-600">
-                "{test.quote}"
-              </p>
-              
-              <div className="mt-8 flex items-center gap-4 border-t border-gray-50 pt-6">
-                <img
-                  src={test.image}
-                  alt={test.name}
-                  className="h-10 w-10 rounded-full object-cover border border-gray-100"
-                />
+        {loading ? (
+          <div className="mt-14 flex justify-center py-12" role="status" aria-label="Loading feedback">
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-violet-100 border-t-violet-500" />
+          </div>
+        ) : reviews.length === 0 ? (
+          <div className="mx-auto mt-14 max-w-2xl rounded-2xl border border-violet-100 bg-white/80 p-10 text-center shadow-sm">
+            <p className="font-semibold text-zinc-800">No customer reviews yet</p>
+            <p className="mt-2 text-sm text-zinc-500">Delivered orders can be rated by both the buyer and the seller. The highest-rated feedback will appear here.</p>
+          </div>
+        ) : (
+          <div className="mt-14 grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
+            {reviews.map((review, index) => (
+              <article key={review._id} className={`flex flex-col justify-between rounded-2xl border bg-white/90 p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-md ${['border-rose-200', 'border-violet-200', 'border-cyan-200', 'border-amber-200', 'border-emerald-200', 'border-fuchsia-200'][index % 6]}`}>
                 <div>
-                  <h4 className="text-xs font-bold text-zinc-950">{test.name}</h4>
-                  <p className="text-[10px] text-zinc-400 font-medium">{test.role}</p>
+                  <div className="flex items-center gap-1" aria-label={`${review.rating} out of 5 stars`}>
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <Star key={star} className={`h-4 w-4 ${star <= review.rating ? 'fill-amber-400 text-amber-400' : 'text-zinc-200'}`} />
+                    ))}
+                    <span className="ml-2 text-xs font-semibold text-zinc-600">{review.rating}.0</span>
+                  </div>
+                  <p className="mt-4 text-sm leading-relaxed text-zinc-700">“{review.comment}”</p>
+                  {review.materialTitle && <p className="mt-3 text-xs font-medium text-violet-700">Order: {review.materialTitle}</p>}
                 </div>
-              </div>
-            </div>
-          ))}
-        </div>
-
+                <div className="mt-6 flex items-center gap-3 border-t border-zinc-100 pt-4">
+                  {review.reviewer?.avatar ? (
+                    <img src={review.reviewer.avatar} alt="" className="h-10 w-10 rounded-full border-2 border-violet-100 object-cover" />
+                  ) : (
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-violet-100 to-rose-100 text-sm font-bold text-violet-700">
+                      {(review.reviewer?.name || '?').slice(0, 1).toUpperCase()}
+                    </div>
+                  )}
+                  <div className="min-w-0">
+                    <p className="truncate text-xs font-bold text-zinc-900">{review.reviewer?.name || 'TexCycle member'}</p>
+                    <p className="mt-0.5 text-[10px] font-medium capitalize text-zinc-500">
+                      {review.reviewerRole} reviewing {review.reviewerRole === 'buyer' ? 'seller' : 'buyer'}
+                    </p>
+                  </div>
+                  <span className="ml-auto rounded-full bg-violet-50 px-2.5 py-1 text-[10px] font-semibold capitalize text-violet-700">{review.reviewerRole}</span>
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );

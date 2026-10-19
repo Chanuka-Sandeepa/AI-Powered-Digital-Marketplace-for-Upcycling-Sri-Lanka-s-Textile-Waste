@@ -1,6 +1,8 @@
 # AI-Powered-Digital-Marketplace-for-Upcycling-Sri-Lanka-s-Textile-Waste
 The system integrates computer vision, machine learning, and optimization techniques to create an intelligent textile waste management platform.
 
+Get All ML- Service/ Models files in google drive : https://drive.google.com/drive/folders/1fvP4v_m7YLgDNQL44fn5o3gXir3hadxJ?usp=sharing
+
 FINAL MEMBER DIVISION
 Member 1 – Fabric Intelligence Module
 Name: Sandeepa

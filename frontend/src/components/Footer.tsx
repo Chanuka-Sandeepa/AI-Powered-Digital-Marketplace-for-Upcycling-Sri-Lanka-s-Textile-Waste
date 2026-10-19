@@ -15,14 +15,14 @@ const Footer: React.FC = () => {
   };
 
   return (
-    <footer className="w-full bg-white border-t border-gray-100 py-16 text-zinc-600">
+    <footer className="w-full border-t border-cyan-100 bg-gradient-to-br from-white via-emerald-50/70 to-cyan-50 py-16 text-zinc-600">
       <div className="w-full w-full px-4 sm:px-6 lg:px-8">
         <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-4">
           
           {/* Column 1: Logo & Description */}
           <div className="flex flex-col gap-4">
             <div className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-zinc-950 text-white">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-500 to-cyan-600 text-white shadow-sm">
                 <Recycle className="h-4.5 w-4.5" />
               </div>
               <span className="font-sans text-lg font-bold tracking-tight text-zinc-900">
@@ -80,7 +80,7 @@ const Footer: React.FC = () => {
               />
               <button
                 type="submit"
-                className="rounded-lg bg-zinc-950 px-4 py-2.5 text-xs font-semibold text-white hover:bg-zinc-800 transition-colors shadow-sm"
+                className="rounded-lg bg-gradient-to-r from-emerald-600 to-cyan-600 px-4 py-2.5 text-xs font-semibold text-white shadow-sm transition-colors hover:from-emerald-700 hover:to-cyan-700"
               >
                 {subscribed ? 'Subscribed!' : 'Subscribe'}
               </button>

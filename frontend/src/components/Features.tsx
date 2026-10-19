@@ -10,29 +10,33 @@ const Features: React.FC = () => {
 
   const features = [
     {
-      icon: <ShieldCheck className="h-5 w-5 text-emerald-600" />,
+      icon: <ShieldCheck className="h-5 w-5" />,
       title: 'Verified Materials',
+      tone: 'text-emerald-700 bg-emerald-100',
       description: 'Every listing undergoes screening for material composition, cleanliness standards, and volume verification.'
     },
     {
-      icon: <Leaf className="h-5 w-5 text-emerald-600" />,
+      icon: <Leaf className="h-5 w-5" />,
       title: 'Sustainable Trading',
+      tone: 'text-cyan-700 bg-cyan-100',
       description: 'Log and track environmental savings metrics like carbon reduction, water saved, and waste diversion rate.'
     },
     {
-      icon: <Users className="h-5 w-5 text-emerald-600" />,
+      icon: <Users className="h-5 w-5" />,
       title: 'Trusted Community',
+      tone: 'text-violet-700 bg-violet-100',
       description: 'Direct connections between verified fabric manufacturers, recycling plants, designers, and artisans.'
     },
     {
-      icon: <Landmark className="h-5 w-5 text-emerald-600" />,
+      icon: <Landmark className="h-5 w-5" />,
       title: 'Value Marketplace',
+      tone: 'text-orange-700 bg-orange-100',
       description: 'Turn textile waste overheads into auxiliary revenue streams, and source raw materials at reduced cost structures.'
     }
   ];
 
   return (
-    <section id="why-choose" className="w-full bg-zinc-50 py-24 border-t border-b border-gray-100">
+    <section id="why-choose" className="w-full border-y border-emerald-100 bg-gradient-to-br from-emerald-50 via-white to-violet-50 py-24">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="grid gap-16 lg:grid-cols-12 lg:gap-8">
           
@@ -63,7 +67,7 @@ const Features: React.FC = () => {
                 key={idx}
                 className="flex flex-col rounded-2xl border border-gray-100 bg-white p-6 shadow-sm transition-all hover:shadow-md hover-lift"
               >
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700">
+                <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${feat.tone}`}>
                   {feat.icon}
                 </div>
                 <h3 className="mt-4 text-sm font-bold text-zinc-950">{feat.title}</h3>
