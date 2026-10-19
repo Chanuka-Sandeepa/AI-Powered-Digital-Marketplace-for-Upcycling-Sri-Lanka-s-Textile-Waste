@@ -109,6 +109,14 @@ const MyInquiries = ({ user, onLogout }: MyInquiriesProps) => {
                       </div>
                       <p className="text-xs text-gray-400 mt-0.5">{formatDate(inq.createdAt)} · to {inq.seller?.name || 'seller'}</p>
                       <p className="text-sm text-gray-600 mt-1.5 line-clamp-2">{inq.message}</p>
+                      {inq.sellerReply && (
+                        <div className="mt-3 rounded-xl border border-emerald-100 bg-emerald-50 p-3">
+                          <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-800">
+                            Seller reply{inq.repliedAt ? ` · ${formatDate(inq.repliedAt)}` : ''}
+                          </p>
+                          <p className="mt-1 whitespace-pre-wrap text-sm text-emerald-950">{inq.sellerReply}</p>
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}

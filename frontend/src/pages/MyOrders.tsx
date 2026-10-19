@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Package, PackageSearch, Download, Truck, Check } from 'lucide-react';
 import BuyerSidebar from '../components/dashboard/BuyerSidebar';
+import OrderReviewForm from '../components/OrderReviewForm';
 import { getMyOrders, downloadReceipt } from '../services/buyerApi';
 import type { OrderRecord } from '../services/buyerApi';
 import type { User } from '../types';
@@ -165,7 +166,9 @@ const MyOrders = ({ user, onLogout }: MyOrdersProps) => {
                         <div className="flex items-center gap-3 mt-1.5 flex-wrap">
                           <span className="text-sm font-bold text-teal-600">LKR {order.totalAmount.toLocaleString()}</span>
                           <span className="text-xs text-gray-400">
-                            {order.paymentMethod === 'card' ? 'Paid by card' : order.paymentStatus === 'paid' ? 'Paid (cash)' : 'Cash on delivery'}
+                            {order.paymentMethod === 'card'
+                              ? order.paymentStatus === 'paid' ? 'Paid by card' : `Card payment ${order.paymentStatus}`
+                              : order.paymentStatus === 'paid' ? 'Paid (cash)' : 'Cash on delivery'}
                           </span>
                           {order.estimatedDeliveryDate && order.orderStatus !== 'delivered' && order.orderStatus !== 'cancelled' && (
                             <span className="text-xs text-gray-400 flex items-center gap-1">
@@ -187,6 +190,15 @@ const MyOrders = ({ user, onLogout }: MyOrdersProps) => {
                     <div className="mt-4 pt-4 border-t border-gray-100">
                       <OrderStatusTracker status={order.orderStatus} />
                     </div>
+                    {order.orderStatus === 'delivered' && (
+                      <OrderReviewForm
+                        orderId={order._id}
+                        reviewerRole="buyer"
+                        revieweeName={order.seller?.name || 'the seller'}
+                        reviewed={Boolean(order.reviewedByMe)}
+                        onSubmitted={() => setOrders((current) => current.map((item) => item._id === order._id ? { ...item, reviewedByMe: true } : item))}
+                      />
+                    )}
                   </div>
                 ))}
               </div>

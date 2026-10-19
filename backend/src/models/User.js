@@ -28,7 +28,7 @@ const userSchema = new mongoose.Schema(
       trim: true,
       match: [/^\S+@\S+\.\S+$/, 'Please provide a valid email'],
     },
-    password: { type: String, required: [true, 'Password is required'], minlength: 6, select: false },
+    password: { type: String, minlength: 6, select: false },
     // Four roles per the project's role matrix: seller and buyer are
     // self-registerable; admin and super_admin are not (see registration
     // controller) - they're created by an existing super_admin or a seed
@@ -54,7 +54,7 @@ userSchema.pre('save', async function hashPassword(next) {
 });
 
 userSchema.methods.matchPassword = async function matchPassword(enteredPassword) {
-  return bcrypt.compare(enteredPassword, this.password);
+  return Boolean(this.password) && bcrypt.compare(enteredPassword, this.password);
 };
 
 userSchema.methods.toPublicJSON = function toPublicJSON() {

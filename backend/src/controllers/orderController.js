@@ -3,6 +3,7 @@ import PDFDocument from 'pdfkit';
 import Order from '../models/Order.js';
 import Material from '../models/Material.js';
 import User from '../models/User.js';
+import Review from '../models/Review.js';
 import { logTraceabilityEvent } from '../utils/traceability.js';
 import { sendOrderConfirmationEmail, sendNewOrderSellerEmail } from '../utils/mailer.js';
 import { createNotification } from '../utils/notifications.js';
@@ -37,6 +38,29 @@ function estimateDelivery(sellerDistrict, buyerDistrict) {
   return { fee, estimatedDeliveryDate };
 }
 
+async function notifyOrderParties(order, buyer, sellerId) {
+  await createNotification(
+    buyer._id || buyer, 'order_placed', 'Order Placed',
+    `Your order for ${order.materialTitle} (${order.quantityKg}kg) has been placed. Order code: ${order.orderCode}`,
+    '/my-orders', order._id
+  );
+  await createNotification(
+    sellerId, 'new_order', 'New Order Received',
+    `You received an order for ${order.materialTitle} (${order.quantityKg}kg) - order code ${order.orderCode}`,
+    '/seller-orders', order._id
+  );
+  if (buyer.email) {
+    sendOrderConfirmationEmail(order, buyer.email, buyer.name).catch((err) =>
+      console.error('[checkout] buyer confirmation email failed:', err.message)
+    );
+  }
+  User.findById(sellerId)
+    .then((seller) => {
+      if (seller) return sendNewOrderSellerEmail(order, seller.email, seller.name);
+    })
+    .catch((err) => console.error('[checkout] seller notification email failed:', err.message));
+}
+
 export const checkout = asyncHandler(async (req, res) => {
   const { items, deliveryAddress, paymentMethod } = req.body;
 
@@ -44,9 +68,9 @@ export const checkout = asyncHandler(async (req, res) => {
     res.status(400);
     throw new Error('Your cart is empty');
   }
-  if (!['card', 'cash'].includes(paymentMethod)) {
+  if (paymentMethod !== 'cash') {
     res.status(400);
-    throw new Error('paymentMethod must be "card" or "cash"');
+    throw new Error('Only cash on delivery is supported currently.');
   }
   const requiredAddressFields = ['fullName', 'phone', 'addressLine', 'city', 'district'];
   const missing = requiredAddressFields.filter((f) => !deliveryAddress?.[f]);
@@ -54,7 +78,6 @@ export const checkout = asyncHandler(async (req, res) => {
     res.status(400);
     throw new Error(`Delivery address is missing: ${missing.join(', ')}`);
   }
-
   // ---- Pass 1: validate everything up front, touch nothing yet ----
   const materials = [];
   for (const item of items) {
@@ -122,24 +145,14 @@ export const checkout = asyncHandler(async (req, res) => {
       estimatedDeliveryDate,
       deliveryAddress,
       paymentMethod,
-      paymentStatus: paymentMethod === 'card' ? 'paid' : 'pending',
+      paymentStatus: 'pending',
     });
     createdOrders.push(order);
 
     await logTraceabilityEvent(material._id, 'Sold', req.user._id, {
       orderId: order._id, quantityKg: qty, paymentMethod,
     });
-
-    await createNotification(
-      req.user._id, 'order_placed', 'Order Placed',
-      `Your order for ${order.materialTitle} (${qty}kg) has been placed. Order code: ${order.orderCode}`,
-      '/my-orders', order._id
-    );
-    await createNotification(
-      material.seller, 'new_order', 'New Order Received',
-      `You received an order for ${order.materialTitle} (${qty}kg) - order code ${order.orderCode}`,
-      '/seller-orders', order._id
-    );
+    await notifyOrderParties(order, req.user, material.seller);
     if (updated.status === 'sold') {
       await createNotification(
         material.seller, 'listing_sold_out', 'Listing Sold Out',
@@ -147,24 +160,14 @@ export const checkout = asyncHandler(async (req, res) => {
         '/my-listings', material._id
       );
     }
-
-    // Fire-and-forget, same pattern as traceability logging - a mail
-    // failure (or SMTP simply not being configured) should never roll
-    // back or block a real order that already succeeded.
-    sendOrderConfirmationEmail(order, req.user.email, req.user.name).catch((err) =>
-      console.error('[checkout] buyer confirmation email failed:', err.message)
-    );
-    User.findById(material.seller)
-      .then((seller) => {
-        if (seller) return sendNewOrderSellerEmail(order, seller.email, seller.name);
-      })
-      .catch((err) => console.error('[checkout] seller notification email failed:', err.message));
   }
 
-  res.status(201).json({
+  const response = {
     message: `Order${createdOrders.length > 1 ? 's' : ''} placed successfully.`,
     orders: createdOrders,
-  });
+  };
+
+  res.status(201).json(response);
 });
 
 // @route GET /api/orders/my-orders
@@ -185,13 +188,23 @@ export const getMyOrders = asyncHandler(async (req, res) => {
     Order.countDocuments(filter),
   ]);
 
+  const reviewedOrders = await Review.find({
+    reviewer: req.user._id,
+    order: { $in: orders.map((order) => order._id) },
+  }).select('order').lean();
+  const reviewedOrderIds = new Set(reviewedOrders.map((review) => review.order.toString()));
+  const ordersWithReviewState = orders.map((order) => ({
+    ...order,
+    reviewedByMe: reviewedOrderIds.has(order._id.toString()),
+  }));
+
   const totalSpentAgg = await Order.aggregate([
     { $match: { buyer: req.user._id } },
     { $group: { _id: null, sum: { $sum: '$totalAmount' } } },
   ]);
 
   res.json({
-    orders, page: pageNum, pages: Math.max(1, Math.ceil(total / limitNum)), total,
+    orders: ordersWithReviewState, page: pageNum, pages: Math.max(1, Math.ceil(total / limitNum)), total,
     totalSpent: totalSpentAgg[0]?.sum || 0,
   });
 });
@@ -215,7 +228,7 @@ export const trackOrder = asyncHandler(async (req, res) => {
   }
 
   const isOwner = order.buyer._id.toString() === req.user._id.toString() || order.seller._id.toString() === req.user._id.toString();
-  if (!isOwner && !['admin', 'super_admin'].includes(req.user.role)) {
+  if (!isOwner && req.user.role !== 'super_admin') {
     res.status(403);
     throw new Error('Not authorized to view this order');
   }
@@ -239,7 +252,17 @@ export const getSellerOrders = asyncHandler(async (req, res) => {
     Order.countDocuments(filter),
   ]);
 
-  res.json({ orders, page: pageNum, pages: Math.max(1, Math.ceil(total / limitNum)), total });
+  const reviewedOrders = await Review.find({
+    reviewer: req.user._id,
+    order: { $in: orders.map((order) => order._id) },
+  }).select('order').lean();
+  const reviewedOrderIds = new Set(reviewedOrders.map((review) => review.order.toString()));
+  const ordersWithReviewState = orders.map((order) => ({
+    ...order,
+    reviewedByMe: reviewedOrderIds.has(order._id.toString()),
+  }));
+
+  res.json({ orders: ordersWithReviewState, page: pageNum, pages: Math.max(1, Math.ceil(total / limitNum)), total });
 });
 
 // @route PUT /api/orders/:id/status
@@ -256,9 +279,14 @@ export const updateOrderStatus = asyncHandler(async (req, res) => {
     res.status(404);
     throw new Error('Order not found');
   }
-  if (order.seller.toString() !== req.user._id.toString() && !['admin', 'super_admin'].includes(req.user.role)) {
+  if (order.seller.toString() !== req.user._id.toString() && req.user.role !== 'super_admin') {
     res.status(403);
     throw new Error('Not authorized to update this order');
+  }
+
+  if (order.paymentMethod === 'card' && order.paymentStatus !== 'paid') {
+    res.status(409);
+    throw new Error('This card order cannot be fulfilled until its payment is confirmed.');
   }
 
   order.orderStatus = orderStatus;
@@ -294,7 +322,7 @@ export const downloadReceipt = asyncHandler(async (req, res) => {
     throw new Error('Order not found');
   }
   const isOwner = order.buyer._id.toString() === req.user._id.toString() || order.seller._id.toString() === req.user._id.toString();
-  if (!isOwner && !['admin', 'super_admin'].includes(req.user.role)) {
+  if (!isOwner && req.user.role !== 'super_admin') {
     res.status(403);
     throw new Error('Not authorized to view this receipt');
   }
@@ -358,7 +386,7 @@ export const downloadReceipt = asyncHandler(async (req, res) => {
   y += 15;
   const addr = order.deliveryAddress;
   doc.fontSize(9).fillColor('#111827')
-    .text(addr.fullName, 50, y).text(order.paymentMethod === 'card' ? 'Card (simulated)' : 'Cash on Delivery', 300, y);
+    .text(addr.fullName, 50, y).text(order.paymentMethod === 'card' ? 'Card payment' : 'Cash on Delivery', 300, y);
   y += 13;
   doc.fillColor('#6b7280')
     .text(addr.addressLine, 50, y).text(`Status: ${order.paymentStatus}`, 300, y);
@@ -370,7 +398,7 @@ export const downloadReceipt = asyncHandler(async (req, res) => {
 
   // ---- Footer ----
   doc.fontSize(8).fillColor('#9ca3af')
-    .text('This receipt was generated by TexCycle AI. Card payments on this platform are simulated for demo purposes.', 50, 750, { width: 495, align: 'center' });
+    .text('This receipt was generated by TexCycle AI.', 50, 750, { width: 495, align: 'center' });
 
   doc.end();
 });

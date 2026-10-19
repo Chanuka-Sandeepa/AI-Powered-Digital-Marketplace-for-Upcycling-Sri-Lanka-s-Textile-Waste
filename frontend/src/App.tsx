@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 
 import HomePage from './pages/HomePage';
@@ -8,6 +8,7 @@ import SellerDashboard from './pages/SellerDashboard';
 import UploadTextileWaste from './pages/UploadTextileWaste';
 import MyListings from './pages/MyListings';
 import SellerOrders from './pages/SellerOrders';
+import SellerInquiries from './pages/SellerInquiries';
 import AnalysisHistory from './pages/AnalysisHistory';
 import SustainabilityHistory from './pages/SustainabilityHistory';
 import SustainabilityAnalysis from './pages/SustainabilityAnalysis';
@@ -31,19 +32,18 @@ import AdminProfile from './pages/AdminProfile';
 import type { User } from './types';
 
 function App() {
-  const [user, setUser] = useState<User | null>(null);
-
-  useEffect(() => {
+  const [user, setUser] = useState<User | null>(() => {
     const cachedUser = localStorage.getItem('user');
-
     if (cachedUser) {
       try {
-        setUser(JSON.parse(cachedUser));
+        return JSON.parse(cachedUser) as User;
       } catch (error) {
         console.error(error);
+        localStorage.removeItem('user');
       }
     }
-  }, []);
+    return null;
+  });
 
   const handleLogout = () => {
     localStorage.removeItem('user');
@@ -123,6 +123,17 @@ function App() {
             <SellerOrders user={user} onLogout={handleLogout} />
           ) : (
             <Navigate to="/login" />
+          )
+        }
+      />
+
+      <Route
+        path="/seller-inquiries"
+        element={
+          user && user.role === 'seller' ? (
+            <SellerInquiries user={user} onLogout={handleLogout} />
+          ) : (
+            <Navigate to="/login" replace />
           )
         }
       />
@@ -317,7 +328,7 @@ function App() {
       <Route
         path="/admin-dashboard"
         element={
-          user && ['admin', 'super_admin'].includes(user.role) ? (
+          user && user.role === 'admin' ? (
             <AdminOverviewPage user={user} onLogout={handleLogout} />
           ) : (
             <Navigate to="/login" />
@@ -327,7 +338,7 @@ function App() {
       <Route
         path="/admin-dashboard/users"
         element={
-          user && ['admin', 'super_admin'].includes(user.role) ? (
+          user && user.role === 'admin' ? (
             <UserManagement user={user} onLogout={handleLogout} />
           ) : (
             <Navigate to="/login" />
@@ -337,7 +348,7 @@ function App() {
       <Route
         path="/admin-dashboard/inquiries"
         element={
-          user && ['admin', 'super_admin'].includes(user.role) ? (
+          user && user.role === 'admin' ? (
             <InquiryOversight user={user} onLogout={handleLogout} />
           ) : (
             <Navigate to="/login" />

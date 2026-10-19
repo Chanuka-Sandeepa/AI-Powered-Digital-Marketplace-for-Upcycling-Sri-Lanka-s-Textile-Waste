@@ -18,6 +18,7 @@ interface AIAnalysisResult {
   healthScore: number;
   repairability: string;
   remainingLifespan: number;
+  images: string[];
 }
 
 const UploadTextileWaste = ({ user, onLogout }: UploadTextileWasteProps) => {
@@ -38,11 +39,11 @@ const UploadTextileWaste = ({ user, onLogout }: UploadTextileWasteProps) => {
   const [isPublishing, setIsPublishing] = useState(false);
   const [publishError, setPublishError] = useState('');
   const [sustainabilityGrade, setSustainabilityGrade] = useState<SustainabilityGradeResult | null>(null);
-  const [isGrading, setIsGrading] = useState(false);
-  const [gradeError, setGradeError] = useState('');
+  const [, setIsGrading] = useState(false);
+  const [, setGradeError] = useState('');
   const [marketplacePrediction, setMarketplacePrediction] = useState<MarketplaceAnalysisResult | null>(null);
   const [isPredictingPrice, setIsPredictingPrice] = useState(false);
-  const [priceError, setPriceError] = useState('');
+  const [, setPriceError] = useState('');
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -265,6 +266,8 @@ const UploadTextileWaste = ({ user, onLogout }: UploadTextileWasteProps) => {
         province,
         industryType: materialInfo.industryType,
         description: `AI-analyzed ${aiResults.fabricType} textile waste. Health Score: ${aiResults.healthScore.toFixed(2)}, Repairability: ${aiResults.repairability}. Sustainability score: ${sustainabilityScore}/100.`,
+        imageUrl: aiResults.images[0] || '',
+        images: aiResults.images,
         fabricType: aiResults.fabricType,
         confidence: aiResults.confidence,
         defectArea: aiResults.defectArea,
@@ -288,48 +291,36 @@ const UploadTextileWaste = ({ user, onLogout }: UploadTextileWasteProps) => {
     return 'text-red-600';
   };
 
-  const getConfidenceColor = (confidence: number) => {
-    if (confidence >= 90) return 'text-green-600';
-    if (confidence >= 50) return 'text-yellow-600';
-    return 'text-red-600';
-  };
 
-  const gradeColor: Record<string, string> = {
-    'A+': 'text-emerald-600 bg-emerald-50 border-emerald-200',
-    A: 'text-green-600 bg-green-50 border-green-200',
-    B: 'text-cyan-600 bg-cyan-50 border-cyan-200',
-    C: 'text-amber-600 bg-amber-50 border-amber-200',
-    D: 'text-red-600 bg-red-50 border-red-200',
-  };
 
   return (
-    <div className="flex min-h-screen bg-gray-100">
+    <div className="flex min-h-screen bg-gradient-to-br from-slate-50 via-cyan-50/50 to-violet-50/40">
       <Sidebar user={user} onLogout={onLogout} />
 
-      <main className="flex-1 p-6">
-        <div className="max-w-6xl mx-auto">
+      <main className="min-w-0 flex-1 p-4 sm:p-6 lg:p-8">
+        <div className="mx-auto max-w-6xl">
           {/* Progress Steps */}
-          <div className="flex items-center justify-between mb-8">
+          <div className="mb-8 flex items-center rounded-2xl border border-white/80 bg-white/80 p-3 shadow-sm ring-1 ring-slate-100 backdrop-blur sm:p-5">
             {[
               'Upload Material',
               'AI Analysis',
               'Review Results',
               'Publish Listing'
             ].map((step, index) => (
-              <div key={step} className="flex items-center">
-                <div className={`flex items-center justify-center w-10 h-10 rounded-full ${
-                  currentStep > index + 1 ? 'bg-green-500 text-white' :
-                  currentStep === index + 1 ? 'bg-cyan-500 text-white' :
-                  'bg-gray-300 text-gray-600'
+              <div key={step} className="flex min-w-0 flex-1 items-center last:flex-none">
+                <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-sm font-bold shadow-sm transition-colors sm:h-11 sm:w-11 sm:rounded-2xl ${
+                  currentStep > index + 1 ? 'bg-emerald-500 text-white' :
+                  currentStep === index + 1 ? 'bg-gradient-to-br from-cyan-500 to-teal-500 text-white ring-4 ring-cyan-100' :
+                  'bg-slate-100 text-slate-400'
                 }`}>
                   {currentStep > index + 1 ? '✓' : index + 1}
                 </div>
-                <span className={`ml-2 text-sm ${
-                  currentStep === index + 1 ? 'font-semibold text-cyan-600' : 'text-gray-500'
+                <span className={`ml-2 hidden truncate text-xs sm:block sm:text-sm ${
+                  currentStep === index + 1 ? 'font-semibold text-cyan-700' : currentStep < index + 1 ? 'text-slate-400' : 'font-medium text-emerald-700'
                 }`}>
                   {step}
                 </span>
-                {index < 3 && <div className="w-16 h-1 mx-4 bg-gray-300" />}
+                {index < 3 && <div className={`mx-2 h-1 min-w-3 flex-1 rounded-full sm:mx-4 ${currentStep > index + 1 ? 'bg-emerald-300' : 'bg-slate-100'}`} />}
               </div>
             ))}
           </div>
@@ -338,14 +329,19 @@ const UploadTextileWaste = ({ user, onLogout }: UploadTextileWasteProps) => {
           {currentStep === 1 && (
             <div className="space-y-6">
               {/* Visual Assets */}
-              <div className="bg-white rounded-2xl p-6 shadow-sm border">
-                <h2 className="font-semibold text-xl mb-4">Visual Assets</h2>
-                <p className="text-gray-500 text-sm mb-4">
+              <div className="rounded-3xl border border-white bg-white/90 p-5 shadow-lg shadow-slate-200/50 ring-1 ring-slate-100 sm:p-7">
+                <div className="mb-5 flex items-center gap-3">
+                  <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-cyan-100 text-xl text-cyan-700">✦</span>
+                  <div>
+                    <h2 className="font-semibold text-xl text-slate-900">Visual Assets</h2>
+                    <p className="mt-1 text-sm text-slate-500">
                   Upload high-resolution photos of fabric weave and condition
-                </p>
+                    </p>
+                  </div>
+                </div>
                 
                 <div
-                  className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center cursor-pointer hover:border-cyan-400 transition-colors"
+                  className="group rounded-2xl border-2 border-dashed border-cyan-300 bg-gradient-to-br from-cyan-50 via-white to-violet-50 px-5 py-10 text-center transition-all hover:border-teal-400 hover:shadow-inner sm:py-12"
                   onDrop={handleDrop}
                   onDragOver={(e) => e.preventDefault()}
                 >
@@ -358,29 +354,30 @@ const UploadTextileWaste = ({ user, onLogout }: UploadTextileWasteProps) => {
                     id="image-upload"
                   />
                   <label htmlFor="image-upload" className="cursor-pointer">
-                    <div className="text-gray-400 mb-2">
-                      <svg className="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-100 to-violet-100 text-cyan-700 shadow-sm transition-transform group-hover:-translate-y-1">
+                      <svg className="h-9 w-9" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                       </svg>
                     </div>
-                    <p className="text-gray-600 font-medium">Drag & drop images here</p>
-                    <p className="text-gray-400 text-sm mt-1">or click to browse</p>
-                    <p className="text-gray-400 text-xs mt-2">JPEG, PNG up to 5MB each (max 10 images)</p>
+                    <p className="font-semibold text-slate-800">Drag &amp; drop images here</p>
+                    <p className="mt-1 text-sm text-slate-500">or <span className="font-semibold text-cyan-700">click to browse</span></p>
+                    <p className="mt-3 inline-flex rounded-full bg-white/80 px-3 py-1 text-xs text-slate-500 ring-1 ring-slate-200">JPEG or PNG · up to 5MB each · max 10 images</p>
                   </label>
                 </div>
 
                 {uploadedImages.length > 0 && (
-                  <div className="mt-4 grid grid-cols-5 gap-2">
+                  <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5">
                     {uploadedImages.map((file, index) => (
-                      <div key={index} className="relative">
+                      <div key={index} className="group relative overflow-hidden rounded-xl bg-slate-100 ring-1 ring-slate-200">
                         <img
                           src={URL.createObjectURL(file)}
                           alt={`Upload ${index + 1}`}
-                          className="w-full h-20 object-cover rounded-lg"
+                          className="h-24 w-full object-cover transition-transform group-hover:scale-105"
                         />
                         <button
                           onClick={() => setUploadedImages(uploadedImages.filter((_, i) => i !== index))}
-                          className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 text-xs"
+                          aria-label={`Remove image ${index + 1}`}
+                          className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-rose-500 text-sm text-white shadow transition hover:bg-rose-600"
                         >
                           ×
                         </button>
@@ -391,53 +388,56 @@ const UploadTextileWaste = ({ user, onLogout }: UploadTextileWasteProps) => {
               </div>
 
               {/* Material Information */}
-              <div className="bg-white rounded-2xl p-6 shadow-sm border">
-                <h2 className="font-semibold text-xl mb-4">Material Information</h2>
-                <div className="grid grid-cols-3 gap-4">
+              <div className="rounded-3xl border border-white bg-white/90 p-5 shadow-lg shadow-slate-200/50 ring-1 ring-slate-100 sm:p-7">
+                <div className="mb-5 flex items-center gap-3">
+                  <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-violet-100 text-xl text-violet-700">▦</span>
+                  <div><h2 className="font-semibold text-xl text-slate-900">Material Information</h2><p className="mt-1 text-sm text-slate-500">Add the details buyers need to understand your material.</p></div>
+                </div>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="mb-2 block text-sm font-semibold text-slate-700">
                       Net Weight (KG)
                     </label>
                     <input
                       type="number"
                       value={materialInfo.netWeight}
                       onChange={(e) => setMaterialInfo({...materialInfo, netWeight: e.target.value})}
-                      className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-cyan-400 focus:border-transparent"
+                      className="w-full rounded-xl border border-slate-200 bg-slate-50/70 px-4 py-3 text-slate-800 transition focus:border-cyan-400 focus:bg-white focus:outline-none focus:ring-4 focus:ring-cyan-100"
                       placeholder="450"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="mb-2 block text-sm font-semibold text-slate-700">
                       Quantity / Bundles
                     </label>
                     <input
                       type="number"
                       value={materialInfo.quantity}
                       onChange={(e) => setMaterialInfo({...materialInfo, quantity: e.target.value})}
-                      className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-cyan-400 focus:border-transparent"
+                      className="w-full rounded-xl border border-slate-200 bg-slate-50/70 px-4 py-3 text-slate-800 transition focus:border-cyan-400 focus:bg-white focus:outline-none focus:ring-4 focus:ring-cyan-100"
                       placeholder="12"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="mb-2 block text-sm font-semibold text-slate-700">
                       Origin Location
                     </label>
                     <input
                       type="text"
                       value={materialInfo.originLocation}
                       onChange={(e) => setMaterialInfo({...materialInfo, originLocation: e.target.value})}
-                      className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-cyan-400 focus:border-transparent"
+                      className="w-full rounded-xl border border-slate-200 bg-slate-50/70 px-4 py-3 text-slate-800 transition focus:border-cyan-400 focus:bg-white focus:outline-none focus:ring-4 focus:ring-cyan-100"
                       placeholder="Colombo, Sri Lanka"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="mb-2 block text-sm font-semibold text-slate-700">
                       District
                     </label>
                     <select
                       value={materialInfo.district}
                       onChange={(e) => setMaterialInfo({...materialInfo, district: e.target.value})}
-                      className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-cyan-400 focus:border-transparent"
+                      className="w-full rounded-xl border border-slate-200 bg-slate-50/70 px-4 py-3 text-slate-800 transition focus:border-cyan-400 focus:bg-white focus:outline-none focus:ring-4 focus:ring-cyan-100"
                     >
                       {DISTRICTS.map((d) => (
                         <option key={d} value={d}>{d}</option>
@@ -445,13 +445,13 @@ const UploadTextileWaste = ({ user, onLogout }: UploadTextileWasteProps) => {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="mb-2 block text-sm font-semibold text-slate-700">
                       Industry Type
                     </label>
                     <select
                       value={materialInfo.industryType}
                       onChange={(e) => setMaterialInfo({...materialInfo, industryType: e.target.value})}
-                      className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-cyan-400 focus:border-transparent"
+                      className="w-full rounded-xl border border-slate-200 bg-slate-50/70 px-4 py-3 text-slate-800 transition focus:border-cyan-400 focus:bg-white focus:outline-none focus:ring-4 focus:ring-cyan-100"
                     >
                       {INDUSTRY_TYPES.map((t) => (
                         <option key={t} value={t}>{t}</option>
@@ -459,13 +459,13 @@ const UploadTextileWaste = ({ user, onLogout }: UploadTextileWasteProps) => {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="mb-2 block text-sm font-semibold text-slate-700">
                       Condition
                     </label>
                     <select
                       value={materialInfo.condition}
                       onChange={(e) => setMaterialInfo({...materialInfo, condition: e.target.value})}
-                      className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-cyan-400 focus:border-transparent"
+                      className="w-full rounded-xl border border-slate-200 bg-slate-50/70 px-4 py-3 text-slate-800 transition focus:border-cyan-400 focus:bg-white focus:outline-none focus:ring-4 focus:ring-cyan-100"
                     >
                       {CONDITIONS.map((c) => (
                         <option key={c} value={c}>{c}</option>
@@ -484,7 +484,7 @@ const UploadTextileWaste = ({ user, onLogout }: UploadTextileWasteProps) => {
               <button
                 onClick={runAIAnalysis}
                 disabled={uploadedImages.length === 0 || isAnalyzing}
-                className="w-full bg-cyan-500 text-white py-3 rounded-xl font-semibold hover:bg-cyan-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full rounded-2xl bg-gradient-to-r from-cyan-600 via-teal-500 to-emerald-500 py-4 font-bold text-white shadow-lg shadow-cyan-200 transition hover:-translate-y-0.5 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {isAnalyzing ? 'Analyzing...' : 'Run AI Analysis'}
               </button>
@@ -493,7 +493,7 @@ const UploadTextileWaste = ({ user, onLogout }: UploadTextileWasteProps) => {
 
           {/* Step 2: AI Analysis */}
           {currentStep === 2 && isAnalyzing && (
-            <div className="bg-white rounded-2xl p-12 shadow-sm border text-center">
+            <div className="rounded-3xl border border-white bg-white/90 p-12 text-center shadow-lg shadow-cyan-100 ring-1 ring-slate-100">
               <div className="animate-spin w-16 h-16 border-4 border-cyan-500 border-t-transparent rounded-full mx-auto mb-4"></div>
               <h2 className="text-xl font-semibold mb-2">Analyzing Your Images</h2>
               <p className="text-gray-500">Our AI is processing your textile waste images...</p>
@@ -504,31 +504,10 @@ const UploadTextileWaste = ({ user, onLogout }: UploadTextileWasteProps) => {
           {currentStep === 3 && aiResults && (
             <div className="space-y-6">
               {/* AI Generated Insights */}
-              <div className="bg-white rounded-2xl p-6 shadow-sm border">
+              <div className="rounded-3xl border border-white bg-white/90 p-6 shadow-lg shadow-slate-200/50 ring-1 ring-slate-100">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="font-semibold text-xl">AI Generated Insights</h2>
-                  {aiResults.confidence >= 50 ? (
-                    <span className="text-xs bg-green-100 text-green-700 px-3 py-1 rounded-full">
-                      Generated automatically from your uploaded media
-                    </span>
-                  ) : (
-                    <span className="text-xs bg-amber-100 text-amber-700 px-3 py-1 rounded-full">
-                      Low confidence — please review below
-                    </span>
-                  )}
                 </div>
-
-                {aiResults.confidence < 50 && (
-                  <div className="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-800">
-                    <p className="font-medium mb-1">The model isn't very sure about this one ({aiResults.confidence.toFixed(1)}% confidence).</p>
-                    <p className="text-amber-700">
-                      This can happen with dim lighting, busy backgrounds, or a photo taken from too far away.
-                      For a more reliable result: go back and add 2-3 more close-up photos of the fabric texture
-                      in good, even lighting against a plain background — the AI averages across all uploaded
-                      images, so more (clearer) photos usually raises confidence.
-                    </p>
-                  </div>
-                )}
 
                 {aiResults.defectArea > 60 && (
                   <div className="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-800">
@@ -546,12 +525,6 @@ const UploadTextileWaste = ({ user, onLogout }: UploadTextileWasteProps) => {
                   <div>
                     <p className="text-gray-500 text-sm">Fabric Type</p>
                     <p className="font-medium text-lg">{aiResults.fabricType}</p>
-                  </div>
-                  <div>
-                    <p className="text-gray-500 text-sm">Confidence</p>
-                    <p className={`font-medium text-lg ${getConfidenceColor(aiResults.confidence)}`}>
-                      {aiResults.confidence.toFixed(2)}%
-                    </p>
                   </div>
                 </div>
 
@@ -578,136 +551,10 @@ const UploadTextileWaste = ({ user, onLogout }: UploadTextileWasteProps) => {
                     <p className="font-medium text-lg">{aiResults.remainingLifespan.toFixed(1)} Months</p>
                   </div>
                 </div>
-
-                {isGrading ? (
-                  <div className="mt-4 p-6 bg-gray-50 rounded-lg border border-gray-200 flex items-center gap-3">
-                    <div className="animate-spin w-5 h-5 border-2 border-cyan-500 border-t-transparent rounded-full"></div>
-                    <p className="text-gray-500 text-sm">Running the sustainability grading model...</p>
-                  </div>
-                ) : sustainabilityGrade ? (
-                  <div className="mt-4 p-5 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200">
-                    <div className="flex items-center justify-between mb-4">
-                      <div>
-                        <p className="text-gray-700 text-sm font-medium">Sustainability Grade</p>
-                        <p className="text-gray-500 text-xs">Predicted by the XGBoost sustainability model</p>
-                      </div>
-                      <span className={`text-2xl font-bold px-4 py-1.5 rounded-full border ${gradeColor[sustainabilityGrade.grade] || 'text-gray-600 bg-gray-50 border-gray-200'}`}>
-                        {sustainabilityGrade.grade}
-                      </span>
-                    </div>
-
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                      <div className="bg-white/70 rounded-lg p-3">
-                        <p className="text-[10px] text-gray-500 uppercase font-semibold">CO₂ Saved</p>
-                        <p className="font-bold text-gray-900">{sustainabilityGrade.co2SavedKg.toFixed(1)} kg</p>
-                      </div>
-                      <div className="bg-white/70 rounded-lg p-3">
-                        <p className="text-[10px] text-gray-500 uppercase font-semibold">Water Saved</p>
-                        <p className="font-bold text-gray-900">{sustainabilityGrade.waterSavedLiters.toFixed(0)} L</p>
-                      </div>
-                      <div className="bg-white/70 rounded-lg p-3">
-                        <p className="text-[10px] text-gray-500 uppercase font-semibold">Energy Saved</p>
-                        <p className="font-bold text-gray-900">{sustainabilityGrade.energySavedKwh.toFixed(1)} kWh</p>
-                      </div>
-                      <div className="bg-white/70 rounded-lg p-3">
-                        <p className="text-[10px] text-gray-500 uppercase font-semibold">Landfill Diverted</p>
-                        <p className="font-bold text-gray-900">{sustainabilityGrade.landfillDivertedKg.toFixed(0)} kg</p>
-                      </div>
-                      <div className="bg-white/70 rounded-lg p-3">
-                        <p className="text-[10px] text-gray-500 uppercase font-semibold">Circularity Score</p>
-                        <p className="font-bold text-gray-900">{sustainabilityGrade.circularityScore.toFixed(0)}/100</p>
-                      </div>
-                      <div className="bg-white/70 rounded-lg p-3">
-                        <p className="text-[10px] text-gray-500 uppercase font-semibold">Recyclability Score</p>
-                        <p className="font-bold text-gray-900">{sustainabilityGrade.recyclabilityScore.toFixed(0)}/100</p>
-                      </div>
-                      <div className="bg-white/70 rounded-lg p-3">
-                        <p className="text-[10px] text-gray-500 uppercase font-semibold">SDG Impact</p>
-                        <p className="font-bold text-gray-900">{sustainabilityGrade.sdgImpactScore.toFixed(0)}/100</p>
-                      </div>
-                      <div className="bg-white/70 rounded-lg p-3">
-                        <p className="text-[10px] text-gray-500 uppercase font-semibold">Economic Impact</p>
-                        <p className="font-bold text-gray-900">{sustainabilityGrade.economicImpactScore.toFixed(0)}/100</p>
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="mt-4 p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200">
-                    {gradeError && (
-                      <p className="text-amber-700 text-xs mb-2">{gradeError}</p>
-                    )}
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-gray-700 text-sm font-medium">Sustainability Score (estimate)</p>
-                        <p className="text-gray-500 text-xs">Rough client-side estimate — not the ML model</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-3xl font-bold text-green-600">{calculateSustainabilityScore(aiResults)}</p>
-                        <p className="text-green-600 text-xs">out of 100</p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-                  <p className="text-gray-500 text-xs">
-                    Material Type, Condition, and Description are read-only as they are locked to AI verification for marketplace trust.
-                  </p>
-                </div>
-              </div>
-
-              {/* Marketplace Intelligence: AI-predicted price, demand, buyers */}
-              <div className="bg-white rounded-2xl p-6 shadow-sm border">
-                <h2 className="font-semibold text-xl mb-4">Marketplace Intelligence</h2>
-
-                {isPredictingPrice ? (
-                  <div className="p-6 bg-gray-50 rounded-lg border border-gray-200 flex items-center gap-3">
-                    <div className="animate-spin w-5 h-5 border-2 border-cyan-500 border-t-transparent rounded-full"></div>
-                    <p className="text-gray-500 text-sm">Predicting price, demand and buyer matches...</p>
-                  </div>
-                ) : marketplacePrediction ? (
-                  <div className="space-y-4">
-                    {priceError && (
-                      <p className="text-amber-700 text-sm bg-amber-50 border border-amber-200 rounded-lg p-4">{priceError}</p>
-                    )}
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="p-4 bg-gradient-to-r from-cyan-50 to-blue-50 rounded-lg border border-cyan-100">
-                        <p className="text-gray-500 text-xs uppercase font-semibold">
-                          {priceError ? 'Estimated Price' : 'AI-Predicted Price'}
-                        </p>
-                        <p className="text-2xl font-bold text-cyan-700 mt-1">
-                          LKR {marketplacePrediction.predictedPricePerKg.toLocaleString()}<span className="text-sm font-medium text-gray-500">/kg</span>
-                        </p>
-                        <p className="text-gray-400 text-xs mt-1">
-                          {priceError ? 'Live model unavailable — using a fallback estimate for this listing.' : 'This is what your listing will publish at.'}
-                        </p>
-                      </div>
-                      <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
-                        <p className="text-gray-500 text-xs uppercase font-semibold">Predicted Demand</p>
-                        <p className="text-2xl font-bold text-gray-800 mt-1">
-                          {marketplacePrediction.demandLevel}
-                          <span className="text-sm font-medium text-gray-400"> ({marketplacePrediction.demandConfidence.toFixed(0)}% confidence)</span>
-                        </p>
-                      </div>
-                    </div>
-
-                    <div>
-                      <p className="text-gray-500 text-xs uppercase font-semibold mb-2">Top Recommended Buyer Types</p>
-                      <div className="flex flex-wrap gap-2">
-                        {marketplacePrediction.recommendedBuyers.slice(0, 3).map((b) => (
-                          <span key={b.buyerType} className="text-xs font-medium bg-purple-50 text-purple-700 px-3 py-1.5 rounded-full border border-purple-100">
-                            {b.buyerType} · {b.matchScore.toFixed(0)}%
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                ) : null}
               </div>
 
               {/* Material Information Review */}
-              <div className="bg-white rounded-2xl p-6 shadow-sm border">
+              <div className="rounded-3xl border border-white bg-white/90 p-6 shadow-lg shadow-slate-200/50 ring-1 ring-slate-100">
                 <h2 className="font-semibold text-xl mb-4">Material Information</h2>
                 <div className="grid grid-cols-3 gap-4">
                   <div>
@@ -735,25 +582,20 @@ const UploadTextileWaste = ({ user, onLogout }: UploadTextileWasteProps) => {
                 <button
                   onClick={() => setCurrentStep(1)}
                   disabled={isPublishing}
-                  className="flex-1 border border-gray-300 text-gray-700 py-3 rounded-xl font-semibold hover:bg-gray-50 transition-colors disabled:opacity-50"
+                  className="flex-1 rounded-2xl border border-slate-200 bg-white py-3 font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 disabled:opacity-50"
                 >
                   Back to Upload
                 </button>
                 <button
                   onClick={handlePublish}
                   disabled={isPublishing || isPredictingPrice}
-                  className="flex-1 bg-cyan-500 text-white py-3 rounded-xl font-semibold hover:bg-cyan-600 transition-colors disabled:opacity-50"
+                  className="flex-1 rounded-2xl bg-gradient-to-r from-cyan-600 to-teal-500 py-3 font-bold text-white shadow-md shadow-cyan-200 transition hover:-translate-y-0.5 hover:shadow-lg disabled:opacity-50"
                 >
                   {isPublishing ? 'Publishing...' : isPredictingPrice ? 'Waiting for price prediction...' : 'Publish Listing'}
                 </button>
               </div>
             </div>
           )}
-
-          {/* Auto-save notice */}
-          <div className="mt-6 text-center text-gray-400 text-sm">
-            Progress is autosaved every 30 seconds
-          </div>
         </div>
       </main>
     </div>

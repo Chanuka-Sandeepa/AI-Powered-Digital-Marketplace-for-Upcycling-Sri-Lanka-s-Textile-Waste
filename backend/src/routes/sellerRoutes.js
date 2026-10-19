@@ -1,6 +1,8 @@
 import express from 'express';
 import {
   getSellerStats,
+  getSellerInquiries,
+  replyToSellerInquiry,
   getSellerMaterialsList,
   getSellerPerformance,
   getSellerActivity,
@@ -17,6 +19,8 @@ const router = express.Router();
 router.use(protect, authorize('seller', 'admin'));
 
 router.get('/stats', getSellerStats);
+router.get('/inquiries', getSellerInquiries);
+router.post('/inquiries/:id/reply', replyToSellerInquiry);
 router.get('/materials', getSellerMaterialsList);
 router.get('/performance', getSellerPerformance);
 router.get('/activity', getSellerActivity);
